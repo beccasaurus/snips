@@ -13,7 +13,13 @@ describe Snip::Server do
     @server.repo.snips.length.should == 7
   end
 
-  it 'should show current specs on index page'
+  it 'should show current specs on index page' do
+    response = @request.get('/')
+    %w( snip sass haml blah-ti-da_something sass_something ).each do |word|
+      response.body.should include( word )
+    end
+  end
+
   it 'should return the plain/text file for a snip at /#{snip filename}'
 
   it 'should show information about a snip, including full current changelog and the code (syntax highlighted) at /#{snipname}'
