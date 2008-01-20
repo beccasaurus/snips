@@ -19,6 +19,35 @@ module SnipServer::Controllers
     end
   end
 
+  class SnipIndex < R '/snips.index', '/snips.index.Z'
+    def get
+      headers['Content-Type'] = 'text/plain'
+      compress = env.PATH_INFO[/\.Z$/] ? true : false
+      index    = SnipServer::Communicator.repo.snips.inject(''){|all,snip| all << (snip.filename + "\n") }
+      if compress
+        require 'zlib'
+        Zlib::Deflate.deflate index
+      else
+        index
+      end
+    end
+  end
+
+  class SnipYaml < R '/snips.yaml', '/snips.yaml.Z'
+    def get
+      headers['Content-Type'] = 'text/plain'
+      compress = env.PATH_INFO[/\.Z$/] ? true : false
+      require 'yaml'
+      yaml     = SnipServer::Communicator.repo.snips.to_yaml
+      if compress
+        require 'zlib'
+        Zlib::Deflate.deflate yaml
+      else
+        yaml
+      end
+    end
+  end
+
   class SnipFile < R '/' + Snip.file_regex.source
     def get name, version
       "... not sure how you got here ... the Snip::Server should have returned a file ..."

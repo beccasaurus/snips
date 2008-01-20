@@ -28,7 +28,7 @@ class Snip
 
   # don't include the full_source when we Snip#to_yaml
   def to_yaml_properties
-    self.yaml_attributes.collect { |x| "@#{x}" }
+    Snip.yaml_attributes.collect { |x| "@#{x}" }
   end
 
   def initialize file_or_text = nil

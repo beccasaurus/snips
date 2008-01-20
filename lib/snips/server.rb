@@ -23,7 +23,7 @@ class Snip::Server
   def call env
     request = Rack::Request.new(env)
     if request.env.PATH_INFO.sub(/^\//,'')[Snip::file_regex]
-      return Rack::File.new( @repo.location  ).call env
+      return Rack::File.new( @repo.location  ).call( env )
     else
       @adapter.call env
     end

@@ -1,5 +1,7 @@
 require File.dirname(__FILE__) + '/spec_helper'
 require 'rack'
+require 'zlib'
+require 'yaml'
 
 describe Snip::Server do
 
@@ -25,6 +27,33 @@ describe Snip::Server do
     response.body.should == File.read( 'examples/snips/test.0001.rb' )
   end
 
+  it 'should return a plain text index of snip names at /snips.index' do
+    response = @request.get '/snips.index'
+    @server.repo.snips.each do |snip|
+      response.body.should include( snip.filename )
+    end
+  end
+  it 'should return a compressed index of snip names at /snips.index.Z' do
+    response = @request.get '/snips.index.Z'
+    Zlib::Inflate.inflate( response.body ).should == @request.get( '/snips.index' ).body
+  end
+
+  it 'should return plain text yaml data for snips at /snips.yaml' do
+    response = @request.get '/snips.yaml'
+    data = YAML::load response.body
+    data.length.should == @server.repo.snips.length
+  end
+  it 'should return compressed yaml data for snips at /snips.yaml.Z' do
+    response = @request.get '/snips.yaml.Z'
+    Zlib::Inflate.inflate( response.body ).should == @request.get( '/snips.yaml' ).body
+  end
+
+  it 'should return a snip index for /#{tagname}/snips.index'
+  it 'should return a snip index for /#{tag1}+#{tag2}/snips.index'
+
+  it 'should return a yaml data for /#{tagname}/snips.yaml'
+  it 'should return a yaml data for /#{tag1}+#{tag2}/snips.yaml'
+
   it 'should show information about a snip, including full current changelog and the code (syntax highlighted) at /#{snipname}'
   it 'should show the history of a snip with one-liner change messages at /#{snipname}/history'
   it 'should show the history of a snip with one-liner change messages at /#{snipname}/log'
@@ -40,17 +69,5 @@ describe Snip::Server do
 
   it 'should show tagged snips at /tag/#{tagname}'
   it 'should show tagged snips at /tags/#{tagname}'
-
-  it 'should return a plain text index of snip names at /snips.index'
-  it 'should return a compressed index of snip names at /snips.index.Z'
-
-  it 'should return plain text yaml data for snips at /snips.yaml'
-  it 'should return compressed yaml data for snips at /snips.yaml.Z'
-
-  it 'should return a snip index for /#{tagname}/snips.index'
-  it 'should return a snip index for /#{tag1}+#{tag2}/snips.index'
-
-  it 'should return a yaml data for /#{tagname}/snips.yaml'
-  it 'should return a yaml data for /#{tag1}+#{tag2}/snips.yaml'
 
 end
