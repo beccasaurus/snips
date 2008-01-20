@@ -83,7 +83,6 @@ class Snip
     end
 
     valid_vars = {}
-    puts "just grabbing valid headers: #{Snip.valid_headers.inspect}"
     Snip.valid_headers.each do |var|
       valid_vars[var] = header_vars[var] if header_vars.keys.include?var
     end
