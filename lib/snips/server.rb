@@ -9,22 +9,24 @@ class Snip::Server
   attr_accessor :repo, :app, :adapter
 
   def initialize repo_location
-    puts "initialzing with #{repo_location}"
     @repo = Snip::Repo.new repo_location
+    raise "what in the world do you think you're doing?  i only serve local repos" unless @repo.local?
 
     require 'rack'
     require 'snips/snip_server'
-    # SnipServer.repo = @repo
+    SnipServer::Communicator.repo = @repo
     
     @app     = SnipServer
     @adapter = Rack::Adapter::Camping.new SnipServer
-    puts "initialized ..."
   end
 
   def call env
-    puts "called call!"
-    [200,{},'hi']
-    @adapter.call env
+    request = Rack::Request.new(env)
+    if request.env.PATH_INFO.sub(/^\//,'')[Snip::file_regex]
+      return Rack::File.new( @repo.location  ).call env
+    else
+      @adapter.call env
+    end
   end
 
   # basically for testing - for now

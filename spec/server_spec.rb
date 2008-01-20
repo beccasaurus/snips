@@ -14,13 +14,16 @@ describe Snip::Server do
   end
 
   it 'should show current specs on index page' do
-    response = @request.get('/')
+    response = @request.get '/'
     %w( snip sass haml blah-ti-da_something sass_something ).each do |word|
       response.body.should include( word )
     end
   end
 
-  it 'should return the plain/text file for a snip at /#{snip filename}'
+  it 'should return the plain/text file for a snip at /#{snip filename}' do
+    response = @request.get '/test.0001.rb'
+    response.body.should == File.read( 'examples/snips/test.0001.rb' )
+  end
 
   it 'should show information about a snip, including full current changelog and the code (syntax highlighted) at /#{snipname}'
   it 'should show the history of a snip with one-liner change messages at /#{snipname}/history'
