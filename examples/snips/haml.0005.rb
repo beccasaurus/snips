@@ -1,5 +1,6 @@
 # Description:    haml filter
 # Author:         John Smith <john@something.com>
+# tags: haml filter filters haml haml filter
 
 if lib_available?'haml'
   filters do

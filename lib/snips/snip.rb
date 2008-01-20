@@ -113,12 +113,16 @@ class Snip
     changelog ? changelog.strip[/.*/] : nil
   end
 
+  def uniq_array_from_string_list list
+    list.gsub( /[\/,;\:#]/ , ' ').gsub( '\\', '' ).split.uniq
+  end
+
   def parse
     Snip.valid_headers.each do |var|
       instance_variable_set "@#{var}", header_vars[var] if header_vars.keys.include?var
     end
-    @dependencies = @dependencies.gsub( /[,;\/\:#]/ , ' ').split if @dependencies and @dependencies.is_a?String
-    @tags = @tags.gsub( /[,;\/\:#]/ , ' ').split if @tags and @tags.is_a?String
+    @dependencies = uniq_array_from_string_list( @dependencies ) if @dependencies and @dependencies.is_a?String
+    @tags = uniq_array_from_string_list( @tags ) if @tags and @tags.is_a?String
     @date = Time.parse @date if @date and @date.is_a?String
   end
 

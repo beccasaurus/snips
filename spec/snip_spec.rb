@@ -27,7 +27,7 @@ describe Snip, 'new' do
     snip.dependencies.should be_empty
     snip.name.should == 'haml'
     snip.version.should == '0005'
-    snip.tags.should be_empty
+    snip.tags.should == %w( haml filter filters )
   end
 
   it 'should parse snip files - test.0001.rb test' do

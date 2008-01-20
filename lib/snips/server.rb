@@ -6,5 +6,10 @@
 # Also contains utility methods for creating / running your own snip server(s)
 #
 class Snip::Server
+  attr_accessor :repo
+
+  def initialize repo_location
+    @repo = Snip::Repo.new repo_location
+  end
 
 end
