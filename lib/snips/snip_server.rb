@@ -22,6 +22,7 @@ module SnipServer::Controllers
   class SnipIndex < R '/snips.index', '/snips.index.Z'
     def get
       headers['Content-Type'] = 'text/plain'
+      headers['Content-Encoding'] = 'x-compress'
       compress = env.PATH_INFO[/\.Z$/] ? true : false
       index    = SnipServer::Communicator.repo.snips.inject(''){|all,snip| all << (snip.filename + "\n") }
       if compress
@@ -36,6 +37,7 @@ module SnipServer::Controllers
   class SnipYaml < R '/snips.yaml', '/snips.yaml.Z'
     def get
       headers['Content-Type'] = 'text/plain'
+      headers['Content-Encoding'] = 'x-compress'
       compress = env.PATH_INFO[/\.Z$/] ? true : false
       require 'yaml'
       yaml     = SnipServer::Communicator.repo.snips.to_yaml

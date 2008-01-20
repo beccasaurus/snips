@@ -48,6 +48,13 @@ describe Snip::Server do
     Zlib::Inflate.inflate( response.body ).should == @request.get( '/snips.yaml' ).body
   end
 
+# re-enable these later.  i'll do some camping develpment for the server later and will use this as a guideline.
+# 
+# but, for _NOW_, i've completed enough of the spec to support making the Repo support remote locations 
+#
+=begin
+  it 'should be able to POST a snip to the server, with some kindof authentication'
+
   it 'should return a snip index for /#{tagname}/snips.index'
   it 'should return a snip index for /#{tag1}+#{tag2}/snips.index'
 
@@ -69,5 +76,6 @@ describe Snip::Server do
 
   it 'should show tagged snips at /tag/#{tagname}'
   it 'should show tagged snips at /tags/#{tagname}'
+=end
 
 end
