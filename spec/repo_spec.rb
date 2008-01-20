@@ -14,6 +14,7 @@ describe Snip::Repo do
     @repo.all_snips.map(&:name).sort.should == %w( blah-ti-da_something erb haml haml_something sass sass sass_something test )
     @repo.snips.map(&:name).sort.should == %w( blah-ti-da_something erb haml haml_something sass sass_something test )
   end  
+  it 'should load all Snips from a directory (remote)'
 
   it 'should return a single, first found snip on #snip' do
     @repo.snip(/sass/).should be_a_kind_of(Snip)
@@ -21,11 +22,22 @@ describe Snip::Repo do
     @repo.snip(:sass).name.should == 'sass'
     lambda { @repo.snip(:sass, :erb) }.should raise_error
   end
+  it 'should return a single, first found snip on #snip (remote)'
 
   it 'should return a many, first found snips on #snips' do
     @repo.snips(/_something/).length.should == 3
     @repo.snips('sass', /sass/, :sass).length.should == 2
     @repo.snips(:sass, /_something/, :erb).length.should == 5
   end
+  it 'should return a many, first found snips on #snips (remote)'
+
+  it 'should be able to read a file'
+  it 'should be able to read a file (remote)'
+
+  it 'should list current snips'
+  it 'should list current snips (remote)'
+
+  it 'should search current snips'
+  it 'should search current snips (remote)'
 
 end
