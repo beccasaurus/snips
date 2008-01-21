@@ -1,0 +1,14 @@
+= snips
+
+snips makes it easy to share ruby (or any) files
+
+== lame!
+
+sure, whatever.
+
+== seriously.  lame.
+
+snips was extracted from another project, resir, which uses snips to 
+make it easy for users to use and share extensions / plugins
+
+install the snips + load/require/read/eval them into your code, as needed

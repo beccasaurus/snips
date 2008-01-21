@@ -1,0 +1,828 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"><head><meta content="text/html; charset=utf-8" http-equiv="Content-Type"/><title>Class: Snip::Server</title><link type="text/css" href="../.././rdoc-style.css" rel="stylesheet" media="screen"/><script type="text/javascript">
+// Allison template
+// Copyright 2007 Cloudburst LLC, all rights reserved
+// Redistribution or modification prohibited
+
+var href_base = '../.././rdoc-style.css'.replace(/(.*\/).*/, '$1'); // inline js is good for something  
+
+function $(id) {
+    if (document.getElementById)
+      elem = document.getElementById(id);
+    else if ( document.all )
+      elem = eval("document.all." + id);
+    else
+      return false;
+    return elem;
+}
+
+  function toggle(id) {
+    elem = $(id);
+    elemStyle = elem.style;   
+    if (elemStyle.display == "block") {
+      elemStyle.display = "none"
+    } else {
+      elemStyle.display = "block"
+    }
+    return true;
+  }
+
+  function toggleText(id) {
+    elem = $(id)
+    if (m = elem.innerHTML.match(/(Hide)(.*)/)) {
+      elem.innerHTML = "Show" + m[2];
+    } else if (m = elem.innerHTML.match(/(Show)(.*)/)) {
+      elem.innerHTML = "Hide" + m[2];
+    }
+    return true;
+  }
+
+function span(s, klass) {
+  return '<span class="' + klass + '">' + s + '</span>';
+}
+  
+function highlightSymbols() {
+  pres = document.getElementsByTagName('pre');
+  for(var i = 0; i < pres.length; i++) {
+    pre = pres[i];
+    spans = pre.getElementsByTagName('span');
+    for(var k = 0; k < spans.length; k++) {
+      span = spans[k];
+      if (span.className.match(/ruby-identifier/)) {
+        if (span.innerHTML.match(/^:/)) {
+          span.className += " ruby-symbol";
+        }
+      }
+    }
+  }
+}
+
+ function hasClass(obj) {
+     var result = false;
+     if (obj.getAttributeNode("class") != null) {
+         result = obj.getAttributeNode("class").value;
+     }
+     return result;
+  }   
+
+ function stripe() {
+    var even = true;
+    var color = "#e4ebed";
+    var tables = document.getElementsByTagName('table');
+    if (tables.length == 0) { return; }
+    for (var h = 0; h < tables.length; h++) {
+        var trs = tables[h].getElementsByTagName("tr");
+        for (var i = 0; i < trs.length; i++) {
+          var tds = trs[i].getElementsByTagName("td");
+            for (var j = 0; j < tds.length; j++) {       
+              if (hasClass(tds[j]) != "first") {                
+              var mytd = tds[j];
+              if (even) {
+                mytd.style.backgroundColor = color;
+              }         
+            }
+          }
+          even =  ! even;
+      }
+    }
+  }
+  
+function ajaxGet(url) {
+  url = (href_base + url).replace('/./', '/')
+  var req = false;
+
+  if (window.ActiveXObject) {
+    try {
+      // stupid hack because IE7 disables local Ajax with the native xmlhttprequest object
+      // for security purposes. Yet ActiveX still works. Thanks, Microsoft. I hate you. Die.
+      req = new ActiveXObject("MSXML2.XMLHTTP.3.0");
+    } catch (e) {
+      try {
+        /* IE 6 and maybe 5, don't know, don't care */
+        req = new ActiveXObject("Msxml2.XMLHTTP");
+      } catch (e) {
+        try {
+          req = new ActiveXObject("Microsoft.XMLHTTP");
+        } catch (e) {
+          req = false;
+        }
+      }
+    }
+  }
+    
+  /* real browsers */
+  if (!req && window.XMLHttpRequest) {
+    try {
+      req = new XMLHttpRequest();
+    } catch (e) {
+      req = false;
+    }
+  } 
+  
+  if (req) {
+    req.open('GET', url, false);
+    req.send(null);
+    return req.responseText;
+  } else {
+    return "Ajax error";  
+  }
+}
+
+
+function addEvent(elm, evType, fn, useCapture) {
+	if (elm.addEventListener) {
+	  elm.addEventListener(evType, fn, useCapture);  
+  	return true;
+	} else if (elm.attachEvent) {
+  	var r = elm.attachEvent('on' + evType, fn);  
+	  return r;  
+	} else {
+  	elm['on' + evType] = fn;
+	}
+}
+
+function insertIndices() {
+  pages = ["class", "file", "method"]
+  for (x in pages) { 
+    $(pages[x]).innerHTML += ajaxGet('fr_' + pages[x] + '_index.html').replace(/(href=")/g, '$1' + href_base);
+  }
+  /* mouseoverify method links */
+  links = $('method').getElementsByTagName('a');
+  for (var x = 0; x < links.length; x++) {
+    if (m = links[x].innerHTML.match(/(.*)\s\((.*)\)/)) {
+      links[x].innerHTML = m[1] + '<br>';
+      links[x].title = m[2];
+    }
+  }
+  /* this is stupid */
+  $('class').style.display = "block";
+  $('file').style.display = "block";
+  
+  /* has to be here because IE7 does not guarantee the onLoad callback order */
+  abbreviateIndicesInner(["class", "file"], 25, "a");
+  /* same, linkTitle() depends on the class link list */
+  linkTitle();
+}
+
+function abbreviateIndices() {
+  var ids = ["defined_in", "child_of", "includes", "requires", "method", "methods"];
+  abbreviateIndicesInner(ids, 25, 'a');
+  abbreviateIndicesInner(ids, 25, 'span');
+}
+
+function abbreviateIndicesInner(indices, amount, tag) {
+  for (var x = 0; x < indices.length; x++) { 
+    var the_index = $(indices[x]);
+    if (the_index) {
+      links = the_index.getElementsByTagName(tag);
+      for (var y = 0; y < links.length; y++) {
+        var link = links[y];
+        if (link.getElementsByTagName('span').length == 0 && link.getElementsByTagName('a').length == 0) {
+          // avoid nesting
+          link.innerHTML = link.innerHTML.replace(/<br>|\n/gi, '');
+          link.title = link.innerHTML;
+          link.innerHTML = abbreviate(link.innerHTML, amount) + '<br>';
+        }
+      }
+    }
+  }
+}
+
+function linkTitle() {
+  
+  /* grab the correct title element from the index */
+  var index_page = ajaxGet('index.html');
+  title_text = index_page.match(/<title>(.*)<\/title>/m)[1];
+  document.title = title_text + " - " + document.title;
+  var p = $('header').getElementsByTagName('p')[0]
+  if (p.innerHTML.match(/^\s*$/)) {
+    p.innerHTML = title_text;
+  } else {
+    p.innerHTML = title_text + ": " + p.innerHTML;
+  }
+  
+  /* set the link properly */
+  title_link = index_page.match(/<a\s+href="(.*?)"/)[1];
+  var element = $('title');
+  var item_type = "";
+  var item_name = "";
+  if (m = element.innerHTML.match(/(Class:|Module:|File:)\s*(.*)/)) {
+    item_type = m[1];
+    item_name = m[2];
+  } else {
+    item_name = element.innerHTML;
+  }
+  element.innerHTML = '<a href="' + href_base + title_link + '">' + item_type + " " + abbreviate(item_name, 45) + '</a>';
+  element.getElementsByTagName('a')[0].title = item_name
+  
+  /* breadcrumb navigation */
+  items = item_name.split("::");
+  items_new = item_name.split("::");
+  file_links = $('class').getElementsByTagName('a');
+  for (var x = 0; x < items.length - 1; x++ ){
+    var item = items[x];
+    link = ("/classes/" + items.slice(0,x).join("/") + "/" + item + ".html").replace('//', '/');
+    regex = new RegExp(RegExp.escape(link) + '$');
+    for (var y = 0; y < file_links.length; y++) {
+      if (file_links[y].href.match(regex)) {
+         items_new[x] = '<a href="' + href_base + link + '">' + item + '</a>';
+         break;
+      }
+    }  
+  }
+  $('item_name').innerHTML = item_type + ' ' + items_new.join(" :: ");
+}
+
+function abbreviate(s, size) {
+  while (s.length > size) {
+    var old_s = s;
+    s = s.replace(/\s|\n/mg, '');
+    s = s.replace(/([A-Z])[a-z]+/m, '$1');
+    if (!s || old_s == s) {
+      return "..." + s.substring(s.length - size, s.length);
+    }
+  }
+  return s;
+}
+
+function disableSubmit(event) {
+  var keyCode = event.keyCode ? event.keyCode : event.which ? event.which : event.charCode;
+  if (keyCode == 13) {
+    return false;
+  } else {
+    return true;
+  }
+}
+  
+function filterList(id, s, event) {
+  
+  /* some weak escaping */
+  s = s.replace(/[^\w\d\.\_\-\/\:\=\[\]\?\!]/g, '');
+  s = RegExp.escape(s);
+  
+  var show_all = false;
+  if (s.match(/^\s*$/)) {
+    show_all = true;
+  }
+  
+  links = $(id).getElementsByTagName('a')
+  regex = new RegExp(s, 'i');
+  
+  for (var x = 0; x < links.length; x++) {
+    var link = links[x];
+    if (show_all) {
+      link.style.display = 'inline';
+    } else {
+       if (link.innerHTML.match(regex)) {        
+         link.style.display = 'inline';
+       } else {
+         link.style.display = 'none';
+       }
+    }
+  }
+  return true;
+}
+
+RegExp.escape = function(text) {
+  if (!arguments.callee.sRE) {
+    var specials = ['/', '.', '*', '+', '?', '|', '(', ')', '[', ']', '{', '}', '\\'];
+    arguments.callee.sRE = new RegExp(
+      '(\\' + specials.join('|\\') + ')', 'g'
+    );
+  }
+  return text.replace(arguments.callee.sRE, '\\$1');
+}
+
+function hacks() {
+  // show the spacer if necessary, 
+  divs = document.getElementsByTagName('div');
+  for(var x = 0; x < divs.length; x++) {
+    if (divs[x].className && divs[x].className.match(/top/)) {
+      document.getElementById('spacer').style.display = 'block';
+    }
+  }
+  // remove extra colons from tables
+  tds = document.getElementsByTagName('td');
+  for(var x = 0; x < tds.length; x++) {
+    str = tds[x].innerHTML
+    if (str.charAt(str.length - 1) == ":") {
+      tds[x].innerHTML = str.slice(0, str.length - 1)
+    }
+  }
+}
+
+addEvent(window, 'load', insertIndices, false);
+addEvent(window, 'load', abbreviateIndices, false);
+addEvent(window, 'load', stripe, false);
+addEvent(window, 'load', highlightSymbols, false);
+addEvent(window, 'load', hacks, false);
+</script></head><body><div id="container"><div class="curve" id="preheader_curve_0"></div><div class="curve" id="preheader_curve_1"></div><div class="curve" id="preheader_curve_2"></div><div class="curve" id="preheader_curve_3"></div><div class="curve" id="preheader_curve_4"></div><div class="curve" id="preheader_curve_5"></div><div id="header"><p>
+</p><span><h1 id="title">
+Class: Snip::Server
+</h1></span></div><div class="clear"></div><div id="left">
+<div class="navigation darker top" id="child_of"><h3>Child of</h3><span>
+
+<a href='../Object.html'>
+Object
+</a>
+</span></div>
+
+<div class="navigation darker top" id="defined_in"><h3>Defined in</h3>
+
+<a href="../../files/lib/snips/server_rb.html">lib/snips/server.rb</a>
+
+</div>
+
+
+
+<div class="navigation top" id="methods"><h3>Methods</h3>
+
+
+<a href='#M000233'>
+authenticate_user<br/>
+</a>
+
+
+
+
+<a href='#M000238'>
+call<br/>
+</a>
+
+
+
+
+<a href='#M000234'>
+get_hash<br/>
+</a>
+
+
+
+
+<a href='#M000235'>
+get_password_hash<br/>
+</a>
+
+
+
+
+<a href='#M000236'>
+get_post_data<br/>
+</a>
+
+
+
+
+<a href='#M000231'>
+get_users<br/>
+</a>
+
+
+
+
+<a href='#M000229'>
+init_user_file<br/>
+</a>
+
+
+
+
+<a href='#M000228'>
+new<br/>
+</a>
+
+
+
+
+<a href='#M000237'>
+reload_repo<br/>
+</a>
+
+
+
+
+<a href='#M000239'>
+run<br/>
+</a>
+
+
+
+
+<a href='#M000232'>
+save_user<br/>
+</a>
+
+
+
+
+<a href='#M000240'>
+sha1_javascript<br/>
+</a>
+
+
+
+
+<a href='#M000230'>
+write_to_user_file<br/>
+</a>
+
+
+</div>
+<div id="spacer"></div><div class="navigation darker index" id="class_wrapper"><div class="list_header"><h3>All classes</h3></div><div class="list_header_link"><a onclick="toggle('class'); toggleText('class_link'); return false;" href="#" id="class_link">Hide...</a></div><div class="clear"></div><div id="class"><form><label for="filter_class">Filter:&nbsp;&nbsp;</label><input type="text" onKeyUp="return filterList('class', this.value, event);" onKeyPress="return disableSubmit(event);" id="filter_class"></input></form></div></div><div class="navigation darker index" id="file_wrapper"><div class="list_header"><h3>All files</h3></div><div class="list_header_link"><a onclick="toggle('file'); toggleText('file_link'); return false;" href="#" id="file_link">Hide...</a></div><div class="clear"></div><div id="file"><form><label for="filter_file">Filter:&nbsp;&nbsp;</label><input type="text" onKeyUp="return filterList('file', this.value, event);" onKeyPress="return disableSubmit(event);" id="filter_file"></input></form></div></div><div class="navigation darker index" id="method_wrapper"><div class="list_header"><h3>All methods</h3></div><div class="list_header_link"><a onclick="toggle('method'); toggleText('method_link'); return false;" href="#" id="method_link">Show...</a></div><div class="clear"></div><div id="method"><form><label for="filter_method">Filter:&nbsp;&nbsp;</label><input type="text" onKeyUp="return filterList('method', this.value, event);" onKeyPress="return disableSubmit(event);" id="filter_method"></input></form></div></div></div><div id="content">
+<h1 id="item_name">Class: Snip::Server</h1>
+
+<div id="description"><p>
+An integrated web server for hosting / sharing snips
+</p>
+<p>
+Basically, a front-end for a <em>local</em> repository, so it can be used
+<em>remotely</em>
+</p>
+<p>
+Also contains utility methods for creating / running your own snip
+server(s)
+</p>
+</div>
+
+
+
+
+<p></p>
+
+<h1>Child modules and classes</h1><p>Class <a href="Server/User.html" class="link">Snip::Server::User</a><br />
+</p>
+
+
+
+<h1>Attributes</h1><p><table><tr><th>Name</th><th>Read/write?</th></tr>
+<tr>
+<td class="highlight">adapter</td>
+
+
+
+
+<td class="normal">RW</td>
+</tr>
+<tr>
+<td class="highlight">app</td>
+
+
+
+
+<td class="normal">RW</td>
+</tr>
+<tr>
+<td class="highlight">repo</td>
+
+
+
+
+<td class="normal">RW</td>
+</tr>
+<tr>
+<td class="highlight">user_file</td>
+
+
+
+
+<td class="normal">RW</td>
+</tr>
+</table></p>
+
+
+<h1>Public Class Methods</h1>
+
+
+<a class="small" name="M000234"><br/></a>
+<div class="method_block"><h3>
+<a href='#M000234'>
+
+
+get_hash
+
+(text)
+
+</a>
+</h3>
+
+<p class="source_link" id="M000234-show-link"><a onclick="toggle('M000234-source'); toggleText('M000234-link'); return false;" href="#" id="M000234-link">Show source...</a></p><div class="source" id="M000234-source"><pre>    <span class="ruby-comment cmt"># File lib/snips/server.rb, line 68</span>
+68:   <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">get_hash</span> <span class="ruby-identifier">text</span>
+69:     <span class="ruby-identifier">require</span> <span class="ruby-value str">'digest/sha1'</span>
+70:     <span class="ruby-constant">Digest</span><span class="ruby-operator">::</span><span class="ruby-constant">SHA1</span>.<span class="ruby-identifier">hexdigest</span> <span class="ruby-identifier">text</span>
+71:   <span class="ruby-keyword kw">end</span></pre></div>
+</div>
+
+<a class="small" name="M000235"><br/></a>
+<div class="method_block"><h3>
+<a href='#M000235'>
+
+
+get_password_hash
+
+(password, salt)
+
+</a>
+</h3>
+
+<p class="source_link" id="M000235-show-link"><a onclick="toggle('M000235-source'); toggleText('M000235-link'); return false;" href="#" id="M000235-link">Show source...</a></p><div class="source" id="M000235-source"><pre>    <span class="ruby-comment cmt"># File lib/snips/server.rb, line 72</span>
+72:   <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">get_password_hash</span> <span class="ruby-identifier">password</span>, <span class="ruby-identifier">salt</span>
+73:     <span class="ruby-identifier">get_hash</span> <span class="ruby-identifier">salt</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">password</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">salt</span>
+74:   <span class="ruby-keyword kw">end</span></pre></div>
+</div>
+
+<a class="small" name="M000236"><br/></a>
+<div class="method_block"><h3>
+<a href='#M000236'>
+
+
+get_post_data
+
+(name, email, password)
+
+</a>
+</h3>
+
+<p class="source_link" id="M000236-show-link"><a onclick="toggle('M000236-source'); toggleText('M000236-link'); return false;" href="#" id="M000236-link">Show source...</a></p><div class="source" id="M000236-source"><pre>    <span class="ruby-comment cmt"># File lib/snips/server.rb, line 76</span>
+76:   <span class="ruby-keyword kw">def</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">get_post_data</span> <span class="ruby-identifier">name</span>, <span class="ruby-identifier">email</span>, <span class="ruby-identifier">password</span>
+77:     <span class="ruby-identifier">post_vars</span> = { <span class="ruby-value str">'name'</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">name</span>, <span class="ruby-value str">'email'</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">email</span> }
+78:     <span class="ruby-identifier">salt</span> = <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">get_hash</span> <span class="ruby-constant">Time</span>.<span class="ruby-identifier">now</span>.<span class="ruby-identifier">to_s</span>
+79:     <span class="ruby-identifier">hash</span> = <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">get_password_hash</span> <span class="ruby-identifier">password</span>, <span class="ruby-identifier">salt</span>
+80:     <span class="ruby-identifier">post_vars</span>.<span class="ruby-identifier">salt</span> = <span class="ruby-identifier">salt</span>
+81:     <span class="ruby-identifier">post_vars</span>.<span class="ruby-identifier">hash</span> = <span class="ruby-identifier">hash</span>
+82:     <span class="ruby-identifier">post_vars</span>
+83:   <span class="ruby-keyword kw">end</span></pre></div>
+</div>
+
+<a class="small" name="M000228"><br/></a>
+<div class="method_block"><h3>
+<a href='#M000228'>
+
+
+new
+
+(repo_location, user_file = '~/.snip-server-users.yaml')
+
+</a>
+</h3>
+
+<p class="source_link" id="M000228-show-link"><a onclick="toggle('M000228-source'); toggleText('M000228-link'); return false;" href="#" id="M000228-link">Show source...</a></p><div class="source" id="M000228-source"><pre>    <span class="ruby-comment cmt"># File lib/snips/server.rb, line 18</span>
+18:   <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span> <span class="ruby-identifier">repo_location</span>, <span class="ruby-identifier">user_file</span> = <span class="ruby-value str">'~/.snip-server-users.yaml'</span>
+19:     <span class="ruby-ivar">@repo</span> = <span class="ruby-constant">Snip</span><span class="ruby-operator">::</span><span class="ruby-constant">Repo</span>.<span class="ruby-identifier">new</span> <span class="ruby-identifier">repo_location</span>
+20:     <span class="ruby-identifier">raise</span> <span class="ruby-value str">&quot;what in the world do you think you're doing?  i only serve local repos&quot;</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-ivar">@repo</span>.<span class="ruby-identifier">local?</span>
+21:     <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">user_file</span> = <span class="ruby-identifier">user_file</span>
+22: 
+23:     <span class="ruby-identifier">require</span> <span class="ruby-value str">'rack'</span>
+24:     <span class="ruby-identifier">require</span> <span class="ruby-value str">'snips/snip_server'</span>
+25:     <span class="ruby-constant">SnipServer</span><span class="ruby-operator">::</span><span class="ruby-constant">Communicator</span>.<span class="ruby-identifier">repo</span> = <span class="ruby-ivar">@repo</span>
+26:     
+27:     <span class="ruby-ivar">@app</span>     = <span class="ruby-constant">SnipServer</span>
+28:     <span class="ruby-ivar">@adapter</span> = <span class="ruby-constant">Rack</span><span class="ruby-operator">::</span><span class="ruby-constant">Adapter</span><span class="ruby-operator">::</span><span class="ruby-constant">Camping</span>.<span class="ruby-identifier">new</span> <span class="ruby-constant">SnipServer</span>
+29:   <span class="ruby-keyword kw">end</span></pre></div>
+</div>
+
+
+<h1>Public Instance Methods</h1>
+
+
+<a class="small" name="M000233"><br/></a>
+<div class="method_block"><h3>
+<a href='#M000233'>
+
+
+authenticate_user
+
+(name, password)
+
+</a>
+</h3>
+
+<p class="source_link" id="M000233-show-link"><a onclick="toggle('M000233-source'); toggleText('M000233-link'); return false;" href="#" id="M000233-link">Show source...</a></p><div class="source" id="M000233-source"><pre>    <span class="ruby-comment cmt"># File lib/snips/server.rb, line 62</span>
+62:   <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">authenticate_user</span> <span class="ruby-identifier">name</span>, <span class="ruby-identifier">password</span>
+63:     <span class="ruby-identifier">users</span> = <span class="ruby-identifier">get_users</span>
+64:     <span class="ruby-identifier">user</span>  = <span class="ruby-identifier">users</span>[<span class="ruby-identifier">name</span>.<span class="ruby-identifier">strip</span>]
+65:     <span class="ruby-keyword kw">return</span> <span class="ruby-keyword kw">false</span> <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">user</span>
+66:     <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">user</span>.<span class="ruby-identifier">hash</span> <span class="ruby-operator">==</span> <span class="ruby-constant">Snip</span><span class="ruby-operator">::</span><span class="ruby-constant">Server</span>.<span class="ruby-identifier">get_password_hash</span>( <span class="ruby-identifier">password</span>, <span class="ruby-identifier">user</span>.<span class="ruby-identifier">salt</span> )
+67:   <span class="ruby-keyword kw">end</span></pre></div>
+</div>
+
+<a class="small" name="M000238"><br/></a>
+<div class="method_block"><h3>
+<a href='#M000238'>
+
+
+call
+
+(env)
+
+</a>
+</h3>
+
+<p class="source_link" id="M000238-show-link"><a onclick="toggle('M000238-source'); toggleText('M000238-link'); return false;" href="#" id="M000238-link">Show source...</a></p><div class="source" id="M000238-source"><pre>     <span class="ruby-comment cmt"># File lib/snips/server.rb, line 88</span>
+ 88:   <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">call</span> <span class="ruby-identifier">env</span>
+ 89:     <span class="ruby-identifier">request</span> = <span class="ruby-constant">Rack</span><span class="ruby-operator">::</span><span class="ruby-constant">Request</span>.<span class="ruby-identifier">new</span> <span class="ruby-identifier">env</span>
+ 90:     
+ 91:     <span class="ruby-comment cmt"># if GET or POST to /filename</span>
+ 92:     <span class="ruby-identifier">filename</span> = <span class="ruby-identifier">request</span>.<span class="ruby-identifier">env</span>.<span class="ruby-constant">PATH_INFO</span>.<span class="ruby-identifier">sub</span>(<span class="ruby-regexp re">/^\//</span>,<span class="ruby-value str">''</span>)
+ 93:     <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">filename</span>[<span class="ruby-constant">Snip</span><span class="ruby-operator">::</span><span class="ruby-identifier">file_regex</span>]
+ 94:       <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">request</span>.<span class="ruby-identifier">env</span>.<span class="ruby-constant">REQUEST_METHOD</span> <span class="ruby-operator">==</span> <span class="ruby-value str">'GET'</span>
+ 95: 
+ 96:         <span class="ruby-comment cmt"># return file    </span>
+ 97:         <span class="ruby-keyword kw">return</span> <span class="ruby-constant">Rack</span><span class="ruby-operator">::</span><span class="ruby-constant">File</span>.<span class="ruby-identifier">new</span>( <span class="ruby-ivar">@repo</span>.<span class="ruby-identifier">location</span>  ).<span class="ruby-identifier">call</span>( <span class="ruby-identifier">env</span> )
+ 98: 
+ 99:       <span class="ruby-keyword kw">elsif</span> <span class="ruby-identifier">request</span>.<span class="ruby-identifier">env</span>.<span class="ruby-constant">REQUEST_METHOD</span> <span class="ruby-operator">==</span> <span class="ruby-value str">'POST'</span>
+100: 
+101:         <span class="ruby-comment cmt"># authenticate user and create file, if it doesn't exist</span>
+102:         <span class="ruby-identifier">filepath</span> = <span class="ruby-constant">File</span>.<span class="ruby-identifier">join</span>( <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">repo</span>.<span class="ruby-identifier">location</span>, <span class="ruby-identifier">filename</span> )
+103:         <span class="ruby-keyword kw">unless</span> <span class="ruby-constant">File</span>.<span class="ruby-identifier">file?</span> <span class="ruby-identifier">filepath</span> <span class="ruby-keyword kw">and</span> <span class="ruby-identifier">request</span>.<span class="ruby-identifier">params</span>[<span class="ruby-value str">'snip'</span>] <span class="ruby-keyword kw">and</span> <span class="ruby-keyword kw">not</span> <span class="ruby-identifier">request</span>.<span class="ruby-identifier">params</span>[<span class="ruby-value str">'snip'</span>].<span class="ruby-identifier">strip</span>.<span class="ruby-identifier">empty?</span>
+104:           <span class="ruby-identifier">protected_section</span> = <span class="ruby-identifier">lambda</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">env</span><span class="ruby-operator">|</span>
+105:             <span class="ruby-keyword kw">begin</span>
+106:               <span class="ruby-constant">File</span>.<span class="ruby-identifier">open</span>( <span class="ruby-identifier">filepath</span>, <span class="ruby-value str">'w'</span> ){ <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span> <span class="ruby-identifier">f</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">request</span>.<span class="ruby-identifier">params</span>[<span class="ruby-value str">'snip'</span>]  }
+107:               <span class="ruby-identifier">reload_repo</span> <span class="ruby-comment cmt"># so it shows up</span>
+108:               [<span class="ruby-value">200</span>, {}, <span class="ruby-value str">&quot;Success!&quot;</span>] 
+109:             <span class="ruby-keyword kw">rescue</span> <span class="ruby-constant">Exception</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">ex</span>
+110:               [<span class="ruby-value">200</span>, {}, <span class="ruby-node">&quot;Snip POST failed. ... #{ex}&quot;</span>] 
+111:             <span class="ruby-keyword kw">end</span>
+112:           }
+113:           <span class="ruby-identifier">authenticated_app</span> = <span class="ruby-constant">Rack</span><span class="ruby-operator">::</span><span class="ruby-constant">Auth</span><span class="ruby-operator">::</span><span class="ruby-constant">Basic</span>.<span class="ruby-identifier">new</span>( <span class="ruby-identifier">protected_section</span> ) <span class="ruby-keyword kw">do</span> <span class="ruby-operator">|</span><span class="ruby-identifier">name</span>,<span class="ruby-identifier">pass</span><span class="ruby-operator">|</span>
+114:             <span class="ruby-identifier">authenticate_user</span> <span class="ruby-identifier">name</span>, <span class="ruby-identifier">pass</span>
+115:           <span class="ruby-keyword kw">end</span>
+116:           <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">authenticated_app</span>.<span class="ruby-identifier">call</span>( <span class="ruby-identifier">env</span> )
+117: 
+118:         <span class="ruby-keyword kw">else</span>
+119:           [<span class="ruby-value">200</span>, {}, <span class="ruby-value str">&quot;Snip POST failed.&quot;</span>]
+120:         <span class="ruby-keyword kw">end</span>
+121: 
+122:       <span class="ruby-keyword kw">end</span>
+123:     
+124:     <span class="ruby-keyword kw">elsif</span> <span class="ruby-identifier">request</span>.<span class="ruby-identifier">env</span>.<span class="ruby-constant">PATH_INFO</span> <span class="ruby-operator">==</span> <span class="ruby-value str">'/signup'</span> <span class="ruby-keyword kw">and</span> <span class="ruby-identifier">request</span>.<span class="ruby-identifier">env</span>.<span class="ruby-constant">REQUEST_METHOD</span> <span class="ruby-operator">==</span> <span class="ruby-value str">'POST'</span>
+125:       <span class="ruby-node">%w( name email salt hash )</span>.<span class="ruby-identifier">each</span> { <span class="ruby-operator">|</span><span class="ruby-identifier">param</span><span class="ruby-operator">|</span>
+126:         <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">request</span>.<span class="ruby-identifier">params</span>[<span class="ruby-identifier">param</span>].<span class="ruby-identifier">nil?</span> <span class="ruby-keyword kw">or</span> <span class="ruby-identifier">request</span>.<span class="ruby-identifier">params</span>[<span class="ruby-identifier">param</span>].<span class="ruby-identifier">strip</span>.<span class="ruby-identifier">empty?</span>
+127:           <span class="ruby-keyword kw">return</span> [<span class="ruby-value">200</span>, {}, <span class="ruby-value str">&quot;You didn't provide all necessary parameters.&quot;</span>] 
+128:         <span class="ruby-keyword kw">end</span>
+129:       }
+130:       <span class="ruby-identifier">user</span> = <span class="ruby-constant">User</span>.<span class="ruby-identifier">new</span> <span class="ruby-identifier">request</span>.<span class="ruby-identifier">params</span>
+131:       <span class="ruby-identifier">saved</span> = <span class="ruby-identifier">save_user</span> <span class="ruby-identifier">user</span>
+132:       <span class="ruby-identifier">body</span> = (<span class="ruby-identifier">saved</span>) <span class="ruby-operator">?</span> <span class="ruby-node">&quot;New User Created: #{user.name}&quot;</span> <span class="ruby-operator">:</span> <span class="ruby-value str">&quot;user not created.&quot;</span> 
+133:       [ <span class="ruby-value">200</span>, {}, <span class="ruby-identifier">body</span> ]
+134: 
+135:     <span class="ruby-comment cmt"># else, return a call to the normal app</span>
+136:     <span class="ruby-keyword kw">else</span>
+137:       <span class="ruby-ivar">@adapter</span>.<span class="ruby-identifier">call</span> <span class="ruby-identifier">env</span>
+138:     
+139:     <span class="ruby-keyword kw">end</span>
+140:   <span class="ruby-keyword kw">end</span></pre></div>
+</div>
+
+<a class="small" name="M000231"><br/></a>
+<div class="method_block"><h3>
+<a href='#M000231'>
+
+
+get_users
+
+()
+
+</a>
+</h3>
+
+<p class="source_link" id="M000231-show-link"><a onclick="toggle('M000231-source'); toggleText('M000231-link'); return false;" href="#" id="M000231-link">Show source...</a></p><div class="source" id="M000231-source"><pre>    <span class="ruby-comment cmt"># File lib/snips/server.rb, line 46</span>
+46:   <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">get_users</span>
+47:     <span class="ruby-identifier">init_user_file</span>
+48:     <span class="ruby-identifier">user_file</span> = <span class="ruby-constant">File</span>.<span class="ruby-identifier">expand_path</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">user_file</span>
+49:     <span class="ruby-identifier">yaml</span> = <span class="ruby-constant">YAML</span><span class="ruby-operator">::</span><span class="ruby-identifier">load</span> <span class="ruby-constant">File</span>.<span class="ruby-identifier">read</span>( <span class="ruby-identifier">user_file</span> )
+50:   <span class="ruby-keyword kw">end</span></pre></div>
+</div>
+
+<a class="small" name="M000229"><br/></a>
+<div class="method_block"><h3>
+<a href='#M000229'>
+
+
+init_user_file
+
+()
+
+</a>
+</h3>
+
+<p class="source_link" id="M000229-show-link"><a onclick="toggle('M000229-source'); toggleText('M000229-link'); return false;" href="#" id="M000229-link">Show source...</a></p><div class="source" id="M000229-source"><pre>    <span class="ruby-comment cmt"># File lib/snips/server.rb, line 37</span>
+37:   <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">init_user_file</span>
+38:     <span class="ruby-identifier">require</span> <span class="ruby-value str">'yaml'</span>
+39:     <span class="ruby-identifier">user_file</span> = <span class="ruby-constant">File</span>.<span class="ruby-identifier">expand_path</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">user_file</span>
+40:     <span class="ruby-identifier">write_to_user_file</span>( {}.<span class="ruby-identifier">to_yaml</span> ) <span class="ruby-keyword kw">unless</span> <span class="ruby-constant">File</span>.<span class="ruby-identifier">file?</span> <span class="ruby-identifier">user_file</span>
+41:   <span class="ruby-keyword kw">end</span></pre></div>
+</div>
+
+<a class="small" name="M000237"><br/></a>
+<div class="method_block"><h3>
+<a href='#M000237'>
+
+
+reload_repo
+
+()
+
+</a>
+</h3>
+
+<p class="source_link" id="M000237-show-link"><a onclick="toggle('M000237-source'); toggleText('M000237-link'); return false;" href="#" id="M000237-link">Show source...</a></p><div class="source" id="M000237-source"><pre>    <span class="ruby-comment cmt"># File lib/snips/server.rb, line 84</span>
+84:   <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">reload_repo</span>
+85:     <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">repo</span>.<span class="ruby-identifier">reload</span>
+86:   <span class="ruby-keyword kw">end</span></pre></div>
+</div>
+
+<a class="small" name="M000239"><br/></a>
+<div class="method_block"><h3>
+<a href='#M000239'>
+
+
+run
+
+()
+
+</a>
+</h3>
+<p>
+basically for testing - for now
+</p>
+
+<p class="source_link" id="M000239-show-link"><a onclick="toggle('M000239-source'); toggleText('M000239-link'); return false;" href="#" id="M000239-link">Show source...</a></p><div class="source" id="M000239-source"><pre>     <span class="ruby-comment cmt"># File lib/snips/server.rb, line 143</span>
+143:   <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">run</span>
+144:     <span class="ruby-identifier">require</span> <span class="ruby-value str">'thin'</span>
+145:     <span class="ruby-constant">Rack</span><span class="ruby-operator">::</span><span class="ruby-constant">Handler</span><span class="ruby-operator">::</span><span class="ruby-constant">Thin</span>.<span class="ruby-identifier">run</span> <span class="ruby-keyword kw">self</span>
+146:   <span class="ruby-keyword kw">end</span></pre></div>
+</div>
+
+<a class="small" name="M000232"><br/></a>
+<div class="method_block"><h3>
+<a href='#M000232'>
+
+
+save_user
+
+(user)
+
+</a>
+</h3>
+
+<p class="source_link" id="M000232-show-link"><a onclick="toggle('M000232-source'); toggleText('M000232-link'); return false;" href="#" id="M000232-link">Show source...</a></p><div class="source" id="M000232-source"><pre>    <span class="ruby-comment cmt"># File lib/snips/server.rb, line 51</span>
+51:   <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">save_user</span> <span class="ruby-identifier">user</span>
+52:     <span class="ruby-identifier">init_user_file</span>
+53:     <span class="ruby-identifier">users</span> = <span class="ruby-identifier">get_users</span>
+54:     <span class="ruby-keyword kw">unless</span> <span class="ruby-identifier">users</span>.<span class="ruby-identifier">keys</span>.<span class="ruby-identifier">include?</span><span class="ruby-identifier">user</span>.<span class="ruby-identifier">name</span>.<span class="ruby-identifier">strip</span>
+55:       <span class="ruby-identifier">users</span>[<span class="ruby-identifier">user</span>.<span class="ruby-identifier">name</span>.<span class="ruby-identifier">strip</span>] = <span class="ruby-identifier">user</span>
+56:       <span class="ruby-identifier">write_to_user_file</span> <span class="ruby-identifier">users</span>.<span class="ruby-identifier">to_yaml</span>
+57:       <span class="ruby-keyword kw">true</span>
+58:     <span class="ruby-keyword kw">else</span>
+59:       <span class="ruby-keyword kw">false</span> <span class="ruby-comment cmt"># user already exists!</span>
+60:     <span class="ruby-keyword kw">end</span>
+61:   <span class="ruby-keyword kw">end</span></pre></div>
+</div>
+
+<a class="small" name="M000240"><br/></a>
+<div class="method_block"><h3>
+<a href='#M000240'>
+
+
+sha1_javascript
+
+()
+
+</a>
+</h3>
+
+<p class="source_link" id="M000240-show-link"><a onclick="toggle('M000240-source'); toggleText('M000240-link'); return false;" href="#" id="M000240-link">Show source...</a></p><div class="source" id="M000240-source"><pre>     <span class="ruby-comment cmt"># File lib/snips/server.rb, line 148</span>
+148:   <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">sha1_javascript</span>
+149:     <span class="ruby-comment cmt"># thanks to:    Paul Andrew Johnston (http://pajhome.org.uk)</span>
+150:     <span class="ruby-comment cmt"># original url: http://pajhome.org.uk/crypt/md5/index.html</span>
+151:     <span class="ruby-comment cmt"># crunched by:  http://wbic16.xedoloh.com/cruncher.html</span>
+152:     <span class="ruby-comment cmt">#</span>
+153:     <span class="ruby-comment cmt"># usage: hex_sha1('string'); == require 'digest/sha1'; Digest::SHA1.hexdigest('string);</span>
+154:     <span class="ruby-comment cmt">#</span>
+155:     <span class="ruby-value str">&quot;var hexcase=0;var b64pad=\&quot;\&quot;;var chrsz=8;function hex_sha1(s){return binb2hex(core_sha1(str2binb(s),s.length*chrsz));}function b64_sha1(s){return binb2b64(core_sha1(str2binb(s),s.length*chrsz));}function str_sha1(s){return binb2str(core_sha1(str2binb(s),s.length*chrsz));}function hex_hmac_sha1(key,data){return binb2hex(core_hmac_sha1(key,data));}function b64_hmac_sha1(key,data){return binb2b64(core_hmac_sha1(key,data));}function str_hmac_sha1(key,data){return binb2str(core_hmac_sha1(key,data));}function sha1_vm_test(){return hex_sha1(\&quot;abc\&quot;)==\&quot;a9993e364706816aba3e25717850c26c9cd0d89d\&quot;;}function core_sha1(x,len){x[len&gt;&gt;5]|=0x80&lt;&lt;(24-len%32);x[((len+64&gt;&gt;9)&lt;&lt;4)+15]=len;var w=Array(80);var a=1732584193;var b=-271733879;var c=-1732584194;var d=271733878;var e=-1009589776;for(var i=0;i&lt;x.length;i+=16){var olda=a;var oldb=b;var oldc=c;var oldd=d;var olde=e;for(var j=0;j&lt;80;j++){if(j&lt;16)w[j]=x[i+j];else w[j]=rol(w[j-3]^ w[j-8]^ w[j-14]^ w[j-16],1);var t=safe_add(safe_add(rol(a,5),sha1_ft(j,b,c,d)),safe_add(safe_add(e,w[j]),sha1_kt(j)));e=d;d=c;c=rol(b,30);b=a;a=t;}a=safe_add(a,olda);b=safe_add(b,oldb);c=safe_add(c,oldc);d=safe_add(d,oldd);e=safe_add(e,olde);}return Array(a,b,c,d,e);}function sha1_ft(t,b,c,d){if(t&lt;20)return(b&amp;c)|((~b)&amp;d);if(t&lt;40)return b ^ c ^ d;if(t&lt;60)return(b&amp;c)|(b&amp;d)|(c&amp;d);return b ^ c ^ d;}function sha1_kt(t){return(t&lt;20)?1518500249:(t&lt;40)?1859775393:(t&lt;60)?-1894007588:-899497514;}function core_hmac_sha1(key,data){var bkey=str2binb(key);if(bkey.length&gt;16)bkey=core_sha1(bkey,key.length*chrsz);var ipad=Array(16),opad=Array(16);for(var i=0;i&lt;16;i++){ipad[i]=bkey[i]^ 0x36363636;opad[i]=bkey[i]^ 0x5C5C5C5C;}var hash=core_sha1(ipad.concat(str2binb(data)),512+data.length*chrsz);return core_sha1(opad.concat(hash),512+160);}function safe_add(x,y){var lsw=(x&amp;0xFFFF)+(y&amp;0xFFFF);var msw=(x&gt;&gt;16)+(y&gt;&gt;16)+(lsw&gt;&gt;16);return(msw&lt;&lt;16)|(lsw&amp;0xFFFF);}function rol(num,cnt){return(num&lt;&lt;cnt)|(num&gt;&gt;&gt;(32-cnt));}function str2binb(str){var bin=Array();var mask=(1&lt;&lt;chrsz)-1;for(var i=0;i&lt;str.length*chrsz;i+=chrsz)bin[i&gt;&gt;5]|=(str.charCodeAt(i/chrsz)&amp;mask)&lt;&lt;(32-chrsz-i%32);return bin;}function binb2str(bin){var str=\&quot;\&quot;;var mask=(1&lt;&lt;chrsz)-1;for(var i=0;i&lt;bin.length*32;i+=chrsz)str+=String.fromCharCode((bin[i&gt;&gt;5]&gt;&gt;&gt;(32-chrsz-i%32))&amp;mask);return str;}function binb2hex(binarray){var hex_tab=hexcase?\&quot;0123456789ABCDEF\&quot;:\&quot;0123456789abcdef\&quot;;var str=\&quot;\&quot;;for(var i=0;i&lt;binarray.length*4;i++){str+=hex_tab.charAt((binarray[i&gt;&gt;2]&gt;&gt;((3-i%4)*8+4))&amp;0xF)+hex_tab.charAt((binarray[i&gt;&gt;2]&gt;&gt;((3-i%4)*8))&amp;0xF);}return str;}function binb2b64(binarray){var tab=\&quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\&quot;;var str=\&quot;\&quot;;for(var i=0;i&lt;binarray.length*4;i+=3){var triplet=(((binarray[i&gt;&gt;2]&gt;&gt;8*(3-i%4))&amp;0xFF)&lt;&lt;16)|(((binarray[i+1&gt;&gt;2]&gt;&gt;8*(3-(i+1)%4))&amp;0xFF)&lt;&lt;8)|((binarray[i+2&gt;&gt;2]&gt;&gt;8*(3-(i+2)%4))&amp;0xFF);for(var j=0;j&lt;4;j++){if(i*8+j*6&gt;binarray.length*32)str+=b64pad;else str+=tab.charAt((triplet&gt;&gt;6*(3-j))&amp;0x3F);}}return str;}\n&quot;</span>
+156:   <span class="ruby-keyword kw">end</span></pre></div>
+</div>
+
+<a class="small" name="M000230"><br/></a>
+<div class="method_block"><h3>
+<a href='#M000230'>
+
+
+write_to_user_file
+
+(yaml)
+
+</a>
+</h3>
+
+<p class="source_link" id="M000230-show-link"><a onclick="toggle('M000230-source'); toggleText('M000230-link'); return false;" href="#" id="M000230-link">Show source...</a></p><div class="source" id="M000230-source"><pre>    <span class="ruby-comment cmt"># File lib/snips/server.rb, line 42</span>
+42:   <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">write_to_user_file</span> <span class="ruby-identifier">yaml</span>
+43:     <span class="ruby-identifier">user_file</span> = <span class="ruby-constant">File</span>.<span class="ruby-identifier">expand_path</span> <span class="ruby-keyword kw">self</span>.<span class="ruby-identifier">user_file</span>
+44:     <span class="ruby-constant">File</span>.<span class="ruby-identifier">open</span>( <span class="ruby-identifier">user_file</span>, <span class="ruby-value str">'w'</span> ){ <span class="ruby-operator">|</span><span class="ruby-identifier">f</span><span class="ruby-operator">|</span> <span class="ruby-identifier">f</span> <span class="ruby-operator">&lt;&lt;</span> <span class="ruby-identifier">yaml</span> }
+45:   <span class="ruby-keyword kw">end</span></pre></div>
+</div>
+
+
+
+
+
+</div><div class="clear" id="footer">Generated on Jan 21, 2008 / Allison 2 &copy; 2007 <a href="http://cloudbur.st">Cloudburst, LLC</a></div></div></body></html>
