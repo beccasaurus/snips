@@ -24,7 +24,7 @@ class Snip
   self.info_attributes   = %w( name version author description tags )
 
   # attributes to include for Snip#to_yaml
-  self.yaml_attributes   = %w( name version author tags description dependencies date changelog )
+  self.yaml_attributes   = %w( name version author tags description dependencies date changelog filename )
 
   # don't include the full_source when we Snip#to_yaml
   def to_yaml_properties
