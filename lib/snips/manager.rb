@@ -24,7 +24,7 @@ class Snip::Manager
     self.variables      ||= {}
     self.path_seperator   = '$' 
     self.rc_file          = ENV['SNIP_RC']    || '~/.sniprc'
-    self.search_path      = ENV['SNIP_PATH']  || '~/.snips'
+    self.search_path      = ENV['SNIP_PATH']  || '~/.snips$http://snips.remi.org:8080' # <-- for NOW, for testing ...
     self.install_path     = ENV['SNIP_REPO']  || '~/.snips'
 
     self.search_repos = []
