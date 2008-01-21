@@ -105,7 +105,8 @@ class Snip::Repo
   end
 
   def snip_path snip
-    snip = snip( snip ) unless snip.is_a?Snip
+    snip = self.snip( snip ) unless snip.is_a?Snip
+    return nil unless snip.is_a?Snip
     File.join location, snip.filename
   end
 

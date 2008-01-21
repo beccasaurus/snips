@@ -41,4 +41,66 @@ class Snip::Manager
     paths || []
   end
 
+  def all_repos
+    ( self.search_repos << self.install_repo ).uniq
+  end
+
+  def snip name_or_matcher
+    first_found = nil
+    all_repos.find{ |repo| first_found = repo.snip(name_or_matcher) }
+    first_found
+  end
+  def snips *names_or_matchers
+    all_repos.inject([]){ |all,repo| all + repo.snips(*names_or_matchers) }.uniq
+  end
+  def all_snips
+    all_repos.inject([]){ |all,repo| all + repo.all_snips }.uniq
+  end
+  def current_snips
+    all_repos.inject([]){ |all,repo| all + repo.current_snips }.uniq
+  end
+  def find_first_snip_and_repo name_or_matcher
+    found_snip, found_repo = nil, nil
+    all_repos.find{ |repo| 
+      found_snip = repo.snip(name_or_matcher) 
+      found_repo = repo if found_snip
+      found_snip
+    }
+    return found_snip, found_repo
+  end
+
+  def installed? snip
+    puts "installed? #{snip.inspect}"
+    path = self.install_repo.snip_path(snip)
+    puts "install path = #{path.inspect}"
+    puts "exists?  #{ File.file?path }" unless path.nil?
+    ( path.nil? ) ? false : File.file?( path )
+  end
+  def install snip
+    raise "wow there, killer ... what're you trying to do?  you can't install to a remote repo." if self.install_repo.remote?
+    unless installed? snip
+      snip, repo = find_first_snip_and_repo snip
+      if snip and repo
+        require 'ftools'
+        File.makedirs self.install_repo.location unless File.directory? self.install_repo.location
+        raise "Problem accessing snip install directory #{self.install_repo.location}" unless File.directory? self.install_repo.location
+
+        File.open( self.install_repo.snip_path(snip), 'w' ){ |f| f << repo.read(snip) }
+        self.install_repo.reload
+        return true
+
+      end
+    end
+    false
+  end
+  def uninstall snip
+    if installed? snip
+      snip_path = self.install_repo.snip_path(snip)
+      File.delete snip_path if File.file? snip_path
+      self.install_repo.reload
+      return true unless File.file? snip_path
+    end
+    false
+  end
+
 end

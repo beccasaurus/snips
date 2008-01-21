@@ -9,8 +9,22 @@ describe Snip::Manager do
     ENV.should_receive(:[]).with('SNIP_REPO').and_return( nil )
   end
 
+  def setup_default_manager
+    use_example_sniprc
+    @manager = Snip::Manager.new
+  end
+
+  # using http://localhost/ as search path
+  def setup_manager_with_remote_search_path
+    ENV.should_receive(:[]).with('SNIP_RC').and_return( File.expand_path('examples/sniprc_with_remote') )
+    ENV.should_receive(:[]).with('SNIP_PATH').and_return( nil )
+    ENV.should_receive(:[]).with('SNIP_REPO').and_return( nil )
+    @manager = Snip::Manager.new
+  end
+
   it 'should have good defaults' do
     ENV.stub!(:[]).and_return(nil)
+    
     manager = Snip::Manager.new
     manager.rc_file.should == '~/.sniprc'
     manager.install_path.should == '~/.snips'
@@ -22,6 +36,7 @@ describe Snip::Manager do
     ENV.should_receive(:[]).with('SNIP_RC').and_return( nil )
     ENV.should_receive(:[]).with('SNIP_PATH').and_return( '~/.snips$/another/path' )
     ENV.should_receive(:[]).with('SNIP_REPO').and_return( nil )
+    
     manager = Snip::Manager.new
     manager.rc_file.should        == '~/.sniprc'
     manager.install_path.should   == '~/.snips'
@@ -32,6 +47,7 @@ describe Snip::Manager do
     ENV.should_receive(:[]).with('SNIP_RC').and_return( nil )
     ENV.should_receive(:[]).with('SNIP_PATH').and_return( nil )
     ENV.should_receive(:[]).with('SNIP_REPO').and_return( '/here/is/repo' )
+    
     manager = Snip::Manager.new
     manager.rc_file.should        == '~/.sniprc'
     manager.install_path.should   == '/here/is/repo'
@@ -42,6 +58,7 @@ describe Snip::Manager do
     ENV.should_receive(:[]).with('SNIP_RC').and_return( File.expand_path('examples/sniprc') )
     ENV.should_receive(:[]).with('SNIP_PATH').and_return( nil )
     ENV.should_receive(:[]).with('SNIP_REPO').and_return( nil )
+
     manager = Snip::Manager.new
     manager.rc_file.should        == File.expand_path('examples/sniprc')
     manager.install_path.should   == 'examples/install_here'
@@ -75,7 +92,13 @@ describe Snip::Manager do
     manager.install_repo.object_id.should == manager.search_repos.first.object_id
   end
 
-  it 'should return snip/snips with first matches found, going thru search path'
+  it 'should return snip/snips with first matches found, going thru search path' do
+    setup_default_manager
+
+    @manager.snip( :sass ).filename.should == 'sass.0100.rb'
+    @manager.snips.length.should == 7
+    @manager.all_snips.length.should == 8
+  end
 
   it 'should check installed snips first when searching or calling #which'
 
@@ -86,7 +109,19 @@ describe Snip::Manager do
   it 'should support remote repos in its search path'
 
   it 'should NOT install a snip from the same repo as the install repo (try to install to itself)'
-  it 'should be able to install from a local repo'
+  it 'should be able to install from a local repo' do
+    setup_default_manager
+    
+    @manager.installed?(:sass).should == false
+    @manager.install(:sass).should == true
+    @manager.installed?(:sass).should == true
+    @manager.install(:sass).should == false
+    @manager.install(:unknown).should == false
+    @manager.installed?(:sass).should == true
+    @manager.uninstall(:sass).should == true
+    @manager.uninstall(:sass).should == false
+    @manager.installed?(:sass).should == false
+  end
   it 'should be able to install from a remote repo'
   it 'should be able to support HTTP AUTHENTICATION for pulling/installing from remote repos'
   it 'should be able to install a specific version of a snip (including old versions)'

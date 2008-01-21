@@ -1,0 +1,4 @@
+self.install_path = 'examples/install_here'
+self.search_path << '$http://localhost/'
+
+# vim: set syntax=ruby
