@@ -1,6 +1,12 @@
 #
 # Represents a repository of snips (local or remote)
 #
+# as a general rule, methods that accept an argument named 'snip'
+# _should_ accept :snip_name, 'snip name', /snip Regexp/, or Snip objects
+#
+# all methods ensure the argument is a snip by:
+#     snip = snip( snip ) unless snip.is_a?Snip
+#
 class Snip::Repo
   attr_accessor :location, :all_snips
 
@@ -84,6 +90,16 @@ class Snip::Repo
       end
       all
     }.uniq
+  end
+
+  def snip_path snip
+    snip = snip( snip ) unless snip.is_a?Snip
+    File.join location, snip.filename
+  end
+
+  def read snip
+    snip = snip( snip ) unless snip.is_a?Snip
+    local? ? File.read( snip_path(snip) ) : open( snip_path(snip) ) if snip
   end
 
   def self.is_remote? location
