@@ -163,4 +163,74 @@ doco
     end
   end
 
+  # REGISTER
+  def self.register_help
+    <<doco
+Usage: snip register http://snip-server-url
+
+  Summary:
+    registers you with a snip server for posting snips
+doco
+  end
+  def self.register *url
+    url = url.shift
+    if url
+      url = url.sub /\/$/, '' # kill trailing slash
+      puts "username:    (this will be your _unique_ ID)"
+      username = gets.chomp.strip
+      
+      puts "email:       (will be used to recover account)"
+      email = gets.chomp.strip
+
+      puts "password:"
+      system 'stty -echo'
+      password = gets.chomp.strip
+      system 'stty echo'
+      
+      puts "creating account ..."
+      post_vars = Snip::Server.get_post_data username, email, password
+      require 'net/http'
+      require 'uri'
+      puts Net::HTTP.post_form(URI.parse("#{url}/signup"), post_vars).body
+    else
+      help :register
+    end
+  end
+
+  # POST
+  def self.post_help
+    <<doco
+Usage: snip post SNIP http://snip-server-url
+
+  See 'snip register' to register with server
+
+  Summary:
+    post a snip up to a snip-server
+doco
+  end
+  def self.post *args
+    snip = args.shift
+    url  = args.shift
+    if snip and url
+      url = url.sub /\/$/, '' # kill trailing slash
+      if $SNIP_MANAGER.installed? snip
+        snip = $SNIP_MANAGER.snip( snip )
+        puts "username:"
+        username = gets.chomp.strip
+        puts "password:"
+        password = gets.chomp.strip
+        
+        require 'net/http'
+        require 'uri'
+        user_pass = "//#{username}:#{password}@"
+        snip_data = $SNIP_MANAGER.read( snip )
+        puts  Net::HTTP.post_form(URI.parse("#{ url.sub('//',user_pass) }/#{ snip.filename }"), { 'snip' => snip_data  } )
+      else
+        puts "you need to have #{snip} installed locally to post it to a server"
+      end
+    else
+      help :post
+    end
+  end
+
 end
