@@ -94,7 +94,7 @@ class Snip::Manager
     false
   end
   def uninstall snip
-    if installed? snip
+    if installed? snip and self.install_repo.local?
       snip_path = self.install_repo.snip_path(snip)
       File.delete snip_path if File.file? snip_path
       self.install_repo.reload
