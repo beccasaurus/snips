@@ -6,7 +6,7 @@ class Snip
   eval "self.variables ||= {}"
   
   # attributes read from file ( name and content)
-  attr_accessor :name, :version, :full_source
+  attr_accessor :name, :version, :full_source, :filename
 
   # attributes read from file's email-style headers
   attr_accessor :author, :tags, :description, :dependencies, :date, :changelog
@@ -34,6 +34,7 @@ class Snip
   def initialize file_or_text = nil
     if File.file?file_or_text
       @full_source = File.read file_or_text
+      @filename    = File.basename file_or_text
       name_parts   = Snip.file_regex.match File.basename( file_or_text )
       @name        = name_parts[1] if name_parts
       @version     = name_parts[2] if name_parts
@@ -51,7 +52,8 @@ class Snip
   end
 
   def filename
-    "#{name}.#{version}.rb"
+    return @filename if @filename
+    "#{name}.#{version}.rb" # default to ruby extension, if initialized with text
   end
 
   def source

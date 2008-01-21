@@ -52,7 +52,7 @@ class Snip::Repo
       @location = File.expand_path @location
 
       if File.directory?@location
-        snips = Dir[ File.join(@location, '*.rb') ].select { |file| file[Snip.file_regex] }
+        snips = Dir[ File.join(@location, '*') ].select { |file| file[Snip.file_regex] }
         @all_snips = snips.collect { |snip| Snip.new snip }.select { |snip| snip.header_vars.length > 0  }
       else
         @all_snips = []
