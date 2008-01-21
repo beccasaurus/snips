@@ -72,9 +72,10 @@ class Snip::Manager
   end
   
   def find_first_snip_and_repo name_or_matcher
+    name_or_matcher = snip.name if name_or_matcher.is_a?Snip
     found_snip, found_repo = nil, nil
     all_repos.find{ |repo| 
-      found_snip = repo.snip(name_or_matcher) 
+      found_snip = repo.snip( name_or_matcher ) 
       found_repo = repo if found_snip
       found_snip
     }

@@ -63,7 +63,7 @@ class Snip::Server
     users = get_users
     user  = users[name.strip]
     return false unless user
-    return user.hash == get_password_hash( password, user.salt )
+    return user.hash == Snip::Server.get_password_hash( password, user.salt )
   end
   def self.get_hash text
     require 'digest/sha1'
@@ -127,11 +127,8 @@ class Snip::Server
           return [200, {}, "You didn't provide all necessary parameters."] 
         end
       }
-      puts "got params: #{request.params.inspect}"
       user = User.new request.params
-      puts "made user: #{user.inspect}"
       saved = save_user user
-      puts "user saved? #{saved}"
       body = (saved) ? "New User Created: #{user.name}" : "user not created." 
       [ 200, {}, body ]
 

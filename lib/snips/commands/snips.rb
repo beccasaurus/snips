@@ -174,20 +174,21 @@ doco
   end
   def self.register *url
     url = url.shift
+    ARGV.clear
     if url
       url = url.sub /\/$/, '' # kill trailing slash
       puts "username:    (this will be your _unique_ ID)"
       username = gets.chomp.strip
       
-      puts "email:       (will be used to recover account)"
+      puts "\nemail:       (will be used to recover account)"
       email = gets.chomp.strip
 
-      puts "password:"
+      puts "\npassword:"
       system 'stty -echo'
       password = gets.chomp.strip
       system 'stty echo'
       
-      puts "creating account ..."
+      puts "\ncreating account ...\n"
       post_vars = Snip::Server.get_post_data username, email, password
       require 'net/http'
       require 'uri'
@@ -211,20 +212,34 @@ doco
   def self.post *args
     snip = args.shift
     url  = args.shift
+    ARGV.clear
     if snip and url
       url = url.sub /\/$/, '' # kill trailing slash
       if $SNIP_MANAGER.installed? snip
-        snip = $SNIP_MANAGER.snip( snip )
+        snip_data = $SNIP_MANAGER.read snip
+        snip      = $SNIP_MANAGER.snip snip
+
         puts "username:"
         username = gets.chomp.strip
-        puts "password:"
+        puts "\npassword:"
+        system 'stty -echo'
         password = gets.chomp.strip
+        system 'stty echo'
         
         require 'net/http'
         require 'uri'
         user_pass = "//#{username}:#{password}@"
-        snip_data = $SNIP_MANAGER.read( snip )
-        puts  Net::HTTP.post_form(URI.parse("#{ url.sub('//',user_pass) }/#{ snip.filename }"), { 'snip' => snip_data  } )
+        puts ''
+        begin
+          response = Net::HTTP.post_form(URI.parse("#{ url.sub('//',user_pass) }/#{ snip.filename }"), { 'snip' => snip_data  } ).body
+          if response.empty?
+            puts "login failed."
+          else
+            puts response
+          end 
+        rescue Errno::ECONNREFUSED
+          puts "there was a problem connecting to the server.  offline?"
+        end
       else
         puts "you need to have #{snip} installed locally to post it to a server"
       end
