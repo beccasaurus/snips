@@ -1,4 +1,0 @@
-self.install_path = 'examples/install_here'
-self.search_path << '$examples/snips'
-
-# vim: set syntax=ruby

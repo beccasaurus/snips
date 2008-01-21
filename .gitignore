@@ -1,2 +1,4 @@
-tmp/*
 *.swp
+pkg/*
+tmp/*
+doc/*
