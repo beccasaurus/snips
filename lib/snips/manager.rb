@@ -61,7 +61,10 @@ class Snip::Manager
   end
 
   def list
-    all_repos.inject(''){ |all,repo| all << "\n**** #{ repo.location } ****\n#{ repo.list }"  } + "\n"
+    all_repos.inject(''){ |all,repo| 
+      all << "\n**** #{ repo.location } ****\n#{ repo.list }" if repo.current_snips.length > 0
+      all
+    } + "\n"
   end
 
   def search *options

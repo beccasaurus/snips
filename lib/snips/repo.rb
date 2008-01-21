@@ -44,6 +44,8 @@ class Snip::Repo
       if yaml
         require 'yaml'
         @all_snips = YAML::load yaml
+      else
+        @all_snips = []
       end
 
     else
@@ -117,6 +119,11 @@ class Snip::Repo
 
   def list
     current_snips.inject(''){ |all,snip| all << ("#{snip.name} (v #{snip.version.to_i})\n") }
+  end
+
+  def log snip
+    snip = snip( snip ) unless snip.is_a?Snip
+    snips = all_snips.select { |snip| snip.name == snip.name }.sort { |a,b| b.version.to_i <=> a.version.to_i }
   end
 
   # currently does NOT support wildcard or regex search queries
