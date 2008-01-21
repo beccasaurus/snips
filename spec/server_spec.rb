@@ -41,7 +41,7 @@ describe Snip::Server do
   it 'should return plain text yaml data for snips at /snips.yaml' do
     response = @request.get '/snips.yaml'
     data = YAML::load response.body
-    data.length.should == @server.repo.snips.length
+    data.length.should == @server.repo.all_snips.length
   end
   it 'should return compressed yaml data for snips at /snips.yaml.Z' do
     response = @request.get '/snips.yaml.Z'

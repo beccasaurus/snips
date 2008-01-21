@@ -24,7 +24,7 @@ module SnipServer::Controllers
       headers['Content-Type'] = 'text/plain'
       headers['Content-Encoding'] = 'x-compress'
       compress = env.PATH_INFO[/\.Z$/] ? true : false
-      index    = SnipServer::Communicator.repo.snips.inject(''){|all,snip| all << (snip.filename + "\n") }
+      index    = SnipServer::Communicator.repo.all_snips.inject(''){|all,snip| all << (snip.filename + "\n") }
       if compress
         require 'zlib'
         Zlib::Deflate.deflate index
@@ -40,7 +40,7 @@ module SnipServer::Controllers
       headers['Content-Encoding'] = 'x-compress'
       compress = env.PATH_INFO[/\.Z$/] ? true : false
       require 'yaml'
-      yaml     = SnipServer::Communicator.repo.snips.to_yaml
+      yaml     = SnipServer::Communicator.repo.all_snips.to_yaml
       if compress
         require 'zlib'
         Zlib::Deflate.deflate yaml

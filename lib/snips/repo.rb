@@ -9,7 +9,24 @@ class Snip::Repo
     @location = repo_location
 
     if remote?
-      raise "Remote repos are currently unsupported!!!!" 
+      @location    = @location.gsub /\/$/, '' # remove trailing slash, if there
+      
+      begin
+        require 'open-uri'
+        yaml = open("#{@location}/snips.yaml.Z").read
+        compressed = true
+      rescue OpenURI::HTTPError # try falling back to plain/text url
+        yaml = open("#{@location}/snips.yaml").read
+        compressed = false
+      end
+
+      if compressed
+        require 'zlib'
+        yaml = Zlib::Inflate.inflate yaml
+      end
+
+      require 'yaml'
+      @all_snips = YAML::load yaml
 
     else
       @location = File.expand_path @location
