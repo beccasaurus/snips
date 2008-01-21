@@ -13,7 +13,10 @@ class Snip::Repo
   # repo_location: local directory or url or remote repository
   def initialize repo_location
     @location = repo_location
+    reload
+  end
 
+  def reload
     if remote?
       @location    = @location.gsub /\/$/, '' # remove trailing slash, if there
       
@@ -21,9 +24,16 @@ class Snip::Repo
         require 'open-uri'
         yaml = open("#{@location}/snips.yaml.Z").read
         compressed = true
-      rescue OpenURI::HTTPError # try falling back to plain/text url
-        yaml = open("#{@location}/snips.yaml").read
-        compressed = false
+      rescue OpenURI::HTTPError    # try falling back to plain/text url
+      rescue Errno::ECONNREFUSED
+        begin
+          yaml = open("#{@location}/snips.yaml").read
+          compressed = false
+        rescue OpenURI::HTTPError  # invalid
+        rescue Errno::ECONNREFUSED
+          yaml = nil
+          compressed = false
+        end
       end
 
       if compressed
@@ -31,8 +41,10 @@ class Snip::Repo
         yaml = Zlib::Inflate.inflate yaml
       end
 
-      require 'yaml'
-      @all_snips = YAML::load yaml
+      if yaml
+        require 'yaml'
+        @all_snips = YAML::load yaml
+      end
 
     else
       @location = File.expand_path @location

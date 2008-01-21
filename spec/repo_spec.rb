@@ -15,6 +15,14 @@ describe Snip::Repo do
     @local_and_remote_repos = [ @repo, @remote_repo ]
   end
 
+  it 'should have a reload method to reload @all_snips' do
+    @repo.all_snips.length.should == 8
+    @repo.all_snips.clear
+    @repo.all_snips.length.should == 0
+    @repo.reload
+    @repo.all_snips.length.should == 8
+  end
+
   it 'should load all Snips from a directory' do
     Snip::Repo.new('/some/crazy/dir').snips.should be_empty
 
