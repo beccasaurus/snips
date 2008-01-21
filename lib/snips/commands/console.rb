@@ -13,18 +13,18 @@ Usage: snip console
 
 doco
   end
-  def self.console
-    unless dirs.nil? or dirs.empty?
+  def self.console *args
+    #unless dirs.nil? or dirs.empty?
       #$server = Snip::Server.new *dirs
       #$sites  = $server.sites
       #puts "resir console started\n\n"
       #puts "variables:"
       #puts "  $server:   the loaded Snip::Server"
       #puts "  $sites:    the loaded Snip::Site's\n\n"
-    else
+    #else
       #puts "resir console started\n\n"
       #puts "use `resir console my-site` to start console with sites\n\n"
-    end
+    #end
 
     require 'irb'
     ARGV.clear

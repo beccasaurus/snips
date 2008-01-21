@@ -59,6 +59,15 @@ class Snip::Manager
   def current_snips
     all_repos.inject([]){ |all,repo| all + repo.current_snips }.uniq
   end
+
+  def list
+    all_repos.inject(''){ |all,repo| all << "\n**** #{ repo.location } ****\n#{ repo.list }"  } + "\n"
+  end
+
+  def search *options
+    all_repos.inject([]){ |all,repo| all + repo.search(*options) }.uniq
+  end
+  
   def find_first_snip_and_repo name_or_matcher
     found_snip, found_repo = nil, nil
     all_repos.find{ |repo| 
@@ -69,15 +78,26 @@ class Snip::Manager
     return found_snip, found_repo
   end
 
+  def which snip
+    snip, repo = find_first_snip_and_repo snip
+    if snip and repo
+      repo.snip_path snip
+    end
+  end
+
+  def read snip
+    snip, repo = find_first_snip_and_repo snip
+    if snip and repo
+      repo.read snip
+    end
+  end
+
   def installed? snip
-    puts "installed? #{snip.inspect}"
     path = self.install_repo.snip_path(snip)
-    puts "install path = #{path.inspect}"
-    puts "exists?  #{ File.file?path }" unless path.nil?
     ( path.nil? ) ? false : File.file?( path )
   end
   def install snip
-    raise "wow there, killer ... what're you trying to do?  you can't install to a remote repo." if self.install_repo.remote?
+    raise "woah there, killer ... what're you trying to do?  you can't install to a remote repo." if self.install_repo.remote?
     unless installed? snip
       snip, repo = find_first_snip_and_repo snip
       if snip and repo
@@ -93,6 +113,7 @@ class Snip::Manager
     end
     false
   end
+
   def uninstall snip
     if installed? snip and self.install_repo.local?
       snip_path = self.install_repo.snip_path(snip)

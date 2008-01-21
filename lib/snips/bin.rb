@@ -127,6 +127,6 @@ doco
 
   # require more commands (simple extensions to Resir::Bin)
   #
-  %w( commands console ).each { |cmd| require File.dirname(__FILE__) + "/commands/#{cmd}" }
+  %w( commands console snips debug ).each { |cmd| require File.dirname(__FILE__) + "/commands/#{cmd}" }
 
 end

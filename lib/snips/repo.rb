@@ -112,7 +112,7 @@ class Snip::Repo
 
   def read snip
     snip = snip( snip ) unless snip.is_a?Snip
-    local? ? File.read( snip_path(snip) ) : open( snip_path(snip) ) if snip
+    local? ? File.read( snip_path(snip) ) : open( snip_path(snip) ).read if snip
   end
 
   def list
