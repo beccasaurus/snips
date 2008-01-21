@@ -13,7 +13,9 @@ module SnipServer::Controllers
   
   class Index < R '/'
     def get
-      @snips = SnipServer::Communicator.repo.snips.sort { |a,b| a.name.downcase <=> b.name.downcase }
+      @snips = SnipServer::Communicator.repo.snips
+      @snips = @snips.sort { |a,b| a.name.downcase <=> b.name.downcase } if @snips and not @snips.empty?
+      @snips = [] if @snips.nil?
       render :snip_list
     end
   end
