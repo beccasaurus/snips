@@ -24,6 +24,7 @@ describe Snip::Manager do
 
   it 'should have good defaults' do
     ENV.stub!(:[]).and_return(nil)
+    File.stub!(:read).and_return('')
     
     manager = Snip::Manager.new
     manager.rc_file.should == '~/.sniprc'
@@ -33,6 +34,7 @@ describe Snip::Manager do
   end
 
   it 'should read SNIP_PATH environment variable, on load, if available, else use default' do
+    File.stub!(:read).and_return('')
     ENV.should_receive(:[]).with('SNIP_RC').and_return( nil )
     ENV.should_receive(:[]).with('SNIP_PATH').and_return( '~/.snips$/another/path' )
     ENV.should_receive(:[]).with('SNIP_REPO').and_return( nil )
@@ -44,6 +46,7 @@ describe Snip::Manager do
   end
 
   it 'should read SNIP_REPO environment variable, on load, if available, else use default' do
+    File.stub!(:read).and_return('')
     ENV.should_receive(:[]).with('SNIP_RC').and_return( nil )
     ENV.should_receive(:[]).with('SNIP_PATH').and_return( nil )
     ENV.should_receive(:[]).with('SNIP_REPO').and_return( '/here/is/repo' )
@@ -66,6 +69,7 @@ describe Snip::Manager do
   end
 
   it 'should support http:// paths with :PORT in search paths, and not mess up cause of the ":" character (switched to $ char)' do
+    File.stub!(:read).and_return('')
     ENV.should_receive(:[]).with('SNIP_RC').and_return( nil )
     ENV.should_receive(:[]).with('SNIP_PATH').and_return( '$~/.snips$/another/path$http://somesite.com:80$/a/path$https://snips.remi.org:4407/snips/here$/root/.snips$' )
     ENV.should_receive(:[]).with('SNIP_REPO').and_return( nil )
@@ -94,8 +98,9 @@ describe Snip::Manager do
 
   it 'should return snip/snips with first matches found, going thru search path' do
     setup_default_manager
-
+    File.stub!(:read).and_return('')
     @manager.snip( :sass ).filename.should == 'sass.0100.rb'
+    @manager.search_repos.delete @manager.search_repos.find { |repo| repo.location == File.expand_path('~/.snips') }
     @manager.snips.length.should == 7
     @manager.all_snips.length.should == 8
   end
