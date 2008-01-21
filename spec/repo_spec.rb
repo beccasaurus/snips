@@ -52,11 +52,34 @@ describe Snip::Repo do
     end
   end
 
-  it 'should list current snips'
-  it 'should list current snips (remote)'
+  it 'should list current snips' do
+    @local_and_remote_repos.each do |repo|
+      list = repo.list
+      %w( sass haml erb blah-ti-da_something sass_something ).each { |word| list.should include(word) }
+      ['sass (v 100)','(v 5)','erb (v 1)'].each { |word| list.should include(word) }
+      list.should_not include('sass (v 99)')
+    end
+  end
 
-  it 'should search current snips'
-  it 'should search current snips (remote)'
+  it 'should search current snips' do
+    @local_and_remote_repos.each do |repo|
+      repo.search( 'filter', :include => [:tags] ).length.should == 2           # haml, test
+      repo.search( 'filter', :include => [] ).length.should == 0                # 
+      repo.search( 'filter', :include => [:description] ).length.should == 3    # haml, sass, erb
+      repo.search( 'filter' ).length.should == 4                                # test, sass, haml, erb
+      repo.search( 'filter', :include => [:name] ).length.should == 0           #
+      repo.search( 'erb', :include => [:name] ).length.should == 1              # erb
+      repo.search( 'erb', :include => [:name,:name,:name] ).length.should == 1  # erb
+      repo.search( 'sass', :include => [:name] ).length.should == 2             # sass, sass_something
+      repo.search( 5, :include => [:version] ).length.should == 2               # haml, sass_something
+      repo.search( 'I MADE some CHANGES' ).length.should == 0                   #
+      repo.search( :erb, :include => :dependencies ).length.should == 1         # sass 0100
+      repo.search( :erb, :include => :dependencies, :all => true ).length.should == 2     # sass 0100, sass 0099
+      repo.search( 'I MADE some CHANGES', :include => [:changelog] ).length.should == 1   # sass 0100
+      repo.search( 'I MADE some CHANGES', :include => :changelog ).length.should == 1     # sass 0100
+      repo.search( 'I MADE some CHANGES', :include => 'changelog' ).length.should == 1     # sass 0100
+    end
+  end
 
   it 'should support snips that do NOT end with .rb ... ANY extension should be supported ... or NO extension??'
   it 'should support snips that do NOT end with .rb ... ANY extension should be supported ... or NO extension?? (remote)'

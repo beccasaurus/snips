@@ -102,6 +102,25 @@ class Snip::Repo
     local? ? File.read( snip_path(snip) ) : open( snip_path(snip) ) if snip
   end
 
+  def list
+    current_snips.inject(''){ |all,snip| all << ("#{snip.name} (v #{snip.version.to_i})\n") }
+  end
+
+  # currently does NOT support wildcard or regex search queries
+  def search query, options = { :include => [:tags, :name, :description] }
+    query = query.to_s.downcase
+    snips = options[:all] ? all_snips : current_snips
+    found = []
+    options[:include] = [ options[:include] ] unless options[:include].is_a?Array
+    options[:include].uniq.each do |snip_attribute|
+      found += snips.select { |snip| 
+        value = snip.send(snip_attribute)
+        value.downcase.include?query if value 
+      }
+    end
+    found.uniq
+  end
+
   def self.is_remote? location
     not location.downcase[/^http/].nil?
   end
