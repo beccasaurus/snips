@@ -73,7 +73,7 @@ class Snip
     header.each_line do |line|
       
       line = line.chomp.gsub /^#/, ''
-      match = /^[\s]?(\w+):(.*)$/.match line
+      match = /^[\s]?([\w\s]\w+):(.*)$/.match line
       
       if match
         current_header_var               = match[1].strip.downcase
@@ -83,13 +83,6 @@ class Snip
       end
 
     end
-
-    valid_vars = {}
-    Snip.valid_headers.each do |var|
-      valid_vars[var] = header_vars[var] if header_vars.keys.include?var
-    end
-
-    @header_vars = valid_vars
     @header_vars
   end
 
@@ -130,6 +123,20 @@ class Snip
 
   def self.parse obj
     return ( obj.to_s.strip.empty? ) ? nil : Snip.new( obj.to_s )
+  end
+
+  def method_missing name, *args
+    setter = true if name.to_s[/=$/]
+    safename = name.to_s.downcase.sub( /=$/, '' )
+    if header_vars.keys.include?safename
+      if setter
+        header_vars.send :[]=, safename, *args
+      else
+        header_vars[safename]
+      end
+    else
+      super
+    end
   end
 
 end

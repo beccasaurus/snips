@@ -78,6 +78,7 @@ describe Snip, 'parse' do
 # tags:   hello-there, foo, bar    ;        ;     chunky/    \ bacon \   
 #
 #Randomness ....
+# another custom header:    this is the custom tag's content
 #
 # changeLOG:
 #     first line
@@ -98,6 +99,7 @@ def some_code
 end
 text
     snip.should be_a_kind_of(Snip)
+    snip.unknown.should == 'who knows ...'
     snip.author.should == 'joe smith'
     snip.author_name.should == 'joe smith'
     snip.author_email.should be_nil
