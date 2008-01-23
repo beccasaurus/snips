@@ -89,7 +89,4 @@ describe Snip::Repo do
     end
   end
 
-  it 'should support snips that do NOT end with .rb ... ANY extension should be supported ... or NO extension??'
-  it 'should support snips that do NOT end with .rb ... ANY extension should be supported ... or NO extension?? (remote)'
-
 end

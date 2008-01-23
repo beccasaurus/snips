@@ -18,46 +18,50 @@ class Snip::Repo
 
   def reload
     if remote?
-      @location    = @location.gsub /\/$/, '' # remove trailing slash, if there
-      
-      begin
-        require 'open-uri'
-        yaml = open("#{@location}/snips.yaml.Z").read
-        compressed = true
-      rescue OpenURI::HTTPError    # try falling back to plain/text url
-      rescue Errno::ECONNREFUSED
-        begin
-          yaml = open("#{@location}/snips.yaml").read
-          compressed = false
-        rescue OpenURI::HTTPError  # invalid
-        rescue Errno::ECONNREFUSED
-          yaml = nil
-          compressed = false
-        end
-      end
-
-      if compressed
-        require 'zlib'
-        yaml = Zlib::Inflate.inflate yaml
-      end
-
-      if yaml
-        require 'yaml'
-        @all_snips = YAML::load yaml
-      else
-        @all_snips = []
-      end
-
+      @location = @location.gsub /\/$/, '' # remove trailing slash, if there
+      reload_remote
     else
       @location = File.expand_path @location
+      reload_local
+    end
+  end
 
-      if File.directory?@location
-        snips = Dir[ File.join(@location, '*') ].select { |file| file[Snip.file_regex] }
-        @all_snips = snips.collect { |snip| Snip.new snip }.select { |snip| snip.header_vars.length > 0  }
-      else
-        @all_snips = []
+  def reload_local
+    if File.directory?@location
+      snips = Dir[ File.join(@location, '*') ].select { |file| file[Snip.file_regex] }
+      @all_snips = snips.collect { |snip| Snip.new snip }.select { |snip| snip.header_vars.length > 0  }
+    else
+      @all_snips = []
+    end
+  end
+
+  def reload_remote
+    begin
+      require 'open-uri'
+      yaml = open("#{@location}/snips.yaml.Z").read
+      compressed = true
+    rescue OpenURI::HTTPError    # try falling back to plain/text url
+    rescue Errno::ECONNREFUSED
+      begin
+        yaml = open("#{@location}/snips.yaml").read
+        compressed = false
+      rescue OpenURI::HTTPError  # invalid
+      rescue Errno::ECONNREFUSED
+        yaml = nil
+        compressed = false
       end
-      
+    end
+
+    if compressed
+      require 'zlib'
+      yaml = Zlib::Inflate.inflate yaml
+    end
+
+    if yaml
+      require 'yaml'
+      @all_snips = YAML::load yaml
+    else
+      @all_snips = []
     end
   end
 
@@ -106,27 +110,62 @@ class Snip::Repo
     }.uniq
   end
 
+  # returns the full path to a snip
+  #
+  #     Snip::Repo.new( '/dir/snips' ).snip_path( :dog )        # => /dir/snips/dog-1.rb
+  #     Snip::Repo.new( 'http://site.com' ).snip_path( :dog )   # => http://site.com/dog-1.rb
+  #
   def snip_path snip
     snip = self.snip( snip ) unless snip.is_a?Snip
     return nil unless snip.is_a?Snip
     File.join location, snip.filename
   end
 
+  # returns the full source of a snip
+  #
   def read snip
     snip = snip( snip ) unless snip.is_a?Snip
     local? ? File.read( snip_path(snip) ) : open( snip_path(snip) ).read if snip
   end
 
-  def list
-    current_snips.inject(''){ |all,snip| all << ("#{snip.name} (v #{snip.version.to_i})\n") }
+  # returns a formatted list of all snips in repo
+  #
+  # for a custom format, pass a block that accepts a Snip object as an argument
+  # and returns a string
+  #
+  #     @repo.list { |snip| "the snip's name is #{snip.name} and it is version #{snip.version}" }
+  #
+  def list &format
+    current_snips.inject('') do |all,snip|
+      unless format.nil?
+        all << "#{ format.call( snip ) }\n"
+      else
+        all << ("#{snip.name} (v #{snip.version.to_i})\n")
+      end
+    end
   end
 
+  # returns all of the versions of a snip, starting with the most recent
+  #
+  #     @repo.log( :dog )  # => [ <Dog Snip v3><Dog Snip v2><Dog Snip v1> ]
   def log snip
     snip = snip( snip ) unless snip.is_a?Snip
     all_snips.select { |x| x.name == snip.name }.sort { |a,b| b.version.to_i <=> a.version.to_i }
   end
 
-  # currently does NOT support wildcard or regex search queries
+  # returns all of the current snips that match a search query
+  #
+  # case in-sensitive
+  #
+  # by default, searches a Snip's tags, name, and description, but any 
+  # method on Snip can be queried
+  #
+  #     @repo.search 'interesting', :include => [ :changelog, :description ]
+  #     
+  # by default, only searches current snips, but you can search all by:
+  #
+  #    @repo.search 'neat', :all => true
+  #
   def search query, options = { :include => [:tags, :name, :description] }
     query = query.to_s.downcase
     snips = options[:all] ? all_snips : current_snips
@@ -141,11 +180,18 @@ class Snip::Repo
     found.uniq
   end
 
+  def remote?
+    Snip::Repo.is_remote? @location
+  end
+  def local?
+    Snip::Repo.is_local? @location
+  end
+
   def self.is_remote? location
     not location.downcase[/^http/].nil?
   end
-  def self.is_local? location;  not is_remote?         location;      end
-  def remote?;                  Snip::Repo.is_remote?  @location;     end
-  def local?;                   Snip::Repo.is_local?   @location;     end
+  def self.is_local? location
+    not is_remote? location
+  end
 
 end

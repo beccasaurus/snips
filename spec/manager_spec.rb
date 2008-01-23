@@ -105,6 +105,7 @@ describe Snip::Manager do
     @manager.all_snips.length.should == 8
   end
 
+=begin
   it 'should check installed snips first when searching or calling #which'
 
   it 'should create directory for install repository (when needed), if does not exist'
@@ -114,6 +115,8 @@ describe Snip::Manager do
   it 'should support remote repos in its search path'
 
   it 'should NOT install a snip from the same repo as the install repo (try to install to itself)'
+=end
+
   it 'should be able to install from a local repo' do
     setup_default_manager
     
@@ -127,6 +130,8 @@ describe Snip::Manager do
     @manager.uninstall(:sass).should == false
     @manager.installed?(:sass).should == false
   end
+
+=begin
   it 'should be able to install from a remote repo'
   it 'should be able to support HTTP AUTHENTICATION for pulling/installing from remote repos'
   it 'should be able to install a specific version of a snip (including old versions)'
@@ -137,5 +142,6 @@ describe Snip::Manager do
   it 'should be able to push to a local repo'
   it 'should be able to push to a remote repo'
   it 'should be able to support HTTP AUTHENTICATION for pushing to remote repos'
+=end
 
 end
