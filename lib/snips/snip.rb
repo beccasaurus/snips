@@ -1,16 +1,11 @@
 class Snip
   include IndifferentVariableHash
-
-  #def to_yaml_properties #Snip.yaml_attributes.collect { |x| "@#{x}" }
-
   def initialize file
     @variables = {}
-
     self.filename = File.basename file
     self.version  = self.filename[ /-([\d\.]+)/ ]
     self.name, self.extension = *self.filename.split( self.version )
     self.version.sub!( /^-/, '' ).sub!( /\.$/, '' )
-
     current_header = nil
     File.read( file ).gsub( /\n^[^#].*/m, '' ).each_line do |line|
       line = line.chomp.gsub /^#\s?/, ''
@@ -27,5 +22,4 @@ class Snip
       end
     end
   end
-
 end
