@@ -1,68 +1,30 @@
-#
-# Represents a single 'snip'
-#
 class Snip
-  meta_include IndifferentVariableHash
-  eval "self.variables ||= {}"
-  
-  # attributes read from file ( name and content)
-  attr_accessor :name, :version, :full_source, :filename
+  include IndifferentVariableHash
 
-  # attributes read from file's email-style headers
-  attr_accessor :author, :tags, :description, :dependencies, :date, :changelog
+  def initialize file
+    @variables = {}
 
-  # regex to match snip filenames [name,version]
+    self.filename = File.basename file
+    self.version  = self.filename[/-([\d\.]+)/]
+    self.name, self.extension = *self.filename.split( self.version )
+    self.version.sub!(/^-/,'').sub!(/\.$/,'')
+    puts @variables.inspect
+
+    File.read( file )
+  end
+
+end
+
+=begin
   self.file_regex        = /(.*)\.([\d]{0,10})\.\w{0,4}/
-  
-  # valid email-style headers for snip files
-  self.valid_headers     = %w( author changelog date dependencies description tags )
-
-  # headers that allow more than one line of content ( other headers only parse the line they're on )
-  self.multiline_headers = %w( changelog description )
-
-  # attributes to include when getting a snip's 'info'
-  self.info_attributes   = %w( name version author description tags )
-
-  # attributes to include for Snip#to_yaml
-  self.yaml_attributes   = %w( name version author tags description dependencies date changelog filename )
-
-  # don't include the full_source when we Snip#to_yaml
+  author ? author.gsub( /<(.*)>/, '' ).strip : nil
+  match = /<(.*)>/.match(author)
+  match ? match[1] : nil
+  changelog ? changelog.strip[/.*/] : nil
+  list.gsub( /[\/,;\:#]/ , ' ').gsub( '\\', '' ).split.uniq
   def to_yaml_properties
-    Snip.yaml_attributes.collect { |x| "@#{x}" }
-  end
-
-  def initialize file_or_text = nil
-    if File.file?file_or_text
-      @full_source = File.read file_or_text
-      @filename    = File.basename file_or_text
-      name_parts   = Snip.file_regex.match File.basename( file_or_text )
-      @name        = name_parts[1] if name_parts
-      @version     = name_parts[2] if name_parts
-    else
-      @full_source = file_or_text
-    end
-    
-    set_defaults
-    parse
-  end
-
-  def set_defaults
-    @tags         = []
-    @dependencies = []
-  end
-
-  def filename
-    return @filename if @filename
-    "#{name}.#{version}.rb" # default to ruby extension, if initialized with text
-  end
-
-  def source
-    @full_source[/\n^[^#].*/m]
-  end
-
-  def header
-    @full_source.gsub /\n^[^#].*/m , ''
-  end
+  Snip.yaml_attributes.collect { |x| "@#{x}" }
+  @full_source.gsub /\n^[^#].*/m , ''
 
   def header_vars
     return @header_vars if @header_vars
@@ -85,58 +47,4 @@ class Snip
     end
     @header_vars
   end
-
-  def info
-    text = ''
-    Snip.info_attributes.each do |var|
-      value = instance_variable_get "@#{var}"
-      text << "#{var}: #{' ' * (15 - var.length)} #{ value }\n" if value
-    end
-    text
-  end
-
-  def author_name
-    author ? author.gsub( /<(.*)>/, '' ).strip : nil
-  end
-
-  def author_email
-    match = /<(.*)>/.match(author)
-    match ? match[1] : nil
-  end
-
-  def changelog_summary
-    changelog ? changelog.strip[/.*/] : nil
-  end
-
-  def uniq_array_from_string_list list
-    list.gsub( /[\/,;\:#]/ , ' ').gsub( '\\', '' ).split.uniq
-  end
-
-  def parse
-    Snip.valid_headers.each do |var|
-      instance_variable_set "@#{var}", header_vars[var] if header_vars.keys.include?var
-    end
-    @dependencies = uniq_array_from_string_list( @dependencies ) if @dependencies and @dependencies.is_a?String
-    @tags = uniq_array_from_string_list( @tags ) if @tags and @tags.is_a?String
-    @date = Time.parse @date if @date and @date.is_a?String
-  end
-
-  def self.parse obj
-    return ( obj.to_s.strip.empty? ) ? nil : Snip.new( obj.to_s )
-  end
-
-  def method_missing name, *args
-    setter = true if name.to_s[/=$/]
-    safename = name.to_s.downcase.sub( /=$/, '' )
-    if header_vars.keys.include?safename
-      if setter
-        header_vars.send :[]=, safename, *args
-      else
-        header_vars[safename]
-      end
-    else
-      super
-    end
-  end
-
-end
+=end
