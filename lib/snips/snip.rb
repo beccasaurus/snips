@@ -1,50 +1,31 @@
 class Snip
   include IndifferentVariableHash
 
+  #def to_yaml_properties #Snip.yaml_attributes.collect { |x| "@#{x}" }
+
   def initialize file
     @variables = {}
 
     self.filename = File.basename file
-    self.version  = self.filename[/-([\d\.]+)/]
+    self.version  = self.filename[ /-([\d\.]+)/ ]
     self.name, self.extension = *self.filename.split( self.version )
-    self.version.sub!(/^-/,'').sub!(/\.$/,'')
-    puts @variables.inspect
+    self.version.sub!( /^-/, '' ).sub!( /\.$/, '' )
 
-    File.read( file )
+    current_header = nil
+    File.read( file ).gsub( /\n^[^#].*/m, '' ).each_line do |line|
+      line = line.chomp.gsub /^#\s?/, ''
+      if line.strip.empty?
+        current_header = nil
+      elsif ( match = /^[\s]?([\w\s]\w+):(.*)$/.match(line) )
+        unless %w(name version filename).include? match[1].strip.downcase
+          current_header = match[1].strip.downcase
+          self.variables[  match[1].strip.downcase  ] = match[2].strip
+        end
+      elsif not current_header.nil?
+        self.variables[  current_header  ] << "\n" unless self.variables[  current_header  ].strip.empty?
+        self.variables[  current_header  ] << line
+      end
+    end
   end
 
 end
-
-=begin
-  self.file_regex        = /(.*)\.([\d]{0,10})\.\w{0,4}/
-  author ? author.gsub( /<(.*)>/, '' ).strip : nil
-  match = /<(.*)>/.match(author)
-  match ? match[1] : nil
-  changelog ? changelog.strip[/.*/] : nil
-  list.gsub( /[\/,;\:#]/ , ' ').gsub( '\\', '' ).split.uniq
-  def to_yaml_properties
-  Snip.yaml_attributes.collect { |x| "@#{x}" }
-  @full_source.gsub /\n^[^#].*/m , ''
-
-  def header_vars
-    return @header_vars if @header_vars
-      
-    @header_vars = {}
-    current_header_var = nil
-
-    header.each_line do |line|
-      
-      line = line.chomp.gsub /^#/, ''
-      match = /^[\s]?([\w\s]\w+):(.*)$/.match line
-      
-      if match
-        current_header_var               = match[1].strip.downcase
-        @header_vars[current_header_var] = match[2].strip  
-      elsif not current_header_var.nil?
-        @header_vars[current_header_var] << ( "\n" + line ) if Snip.multiline_headers.include?current_header_var
-      end
-
-    end
-    @header_vars
-  end
-=end

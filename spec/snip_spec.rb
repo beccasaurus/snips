@@ -34,6 +34,50 @@ end
 
 describe Snip, 'parsing' do
 
-  it ''
+  it "should properly parse out 'email headers'" do
+    file = 'blah-1.0.rb'
+    File.should_not_receive(:exists?).with file
+    File.should_receive(:read).with( file ).and_return( <<snip )
+#name: i can't override name
+# 
+# description: my wonderful description
+#     continues on next
+# lines
+#     because
+#         they're
+#             not
+#                 empty
+#
+# testing:
+#   hello
+#
+#   there
+#
+# blah  :   no can do!
+#w00t:      neat
+#o
+def something_important *args
+  # ...
+end
+snip
+
+    snip = Snip.new file
+    snip.name.should        == 'blah'
+    snip.testing.should     == '  hello'
+    snip.keys.should_not    include('blah')
+    snip.keys.should        include('w00t')
+    snip.w00t.should        == "neat
+o"
+    snip.description.should == <<desc.chomp
+my wonderful description
+    continues on next
+lines
+    because
+        they're
+            not
+                empty
+desc
+
+  end
 
 end
