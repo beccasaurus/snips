@@ -135,7 +135,7 @@ class Snip::Repo
       unless format.nil?
         all << "#{ format.call( snip ) }\n"
       else
-        all << ("#{snip.name} (v #{snip.version.to_i})\n")
+        all << ("#{snip.name} (v #{snip.version})\n")
       end
     end
   end
