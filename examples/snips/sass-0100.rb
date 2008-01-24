@@ -2,9 +2,7 @@
 # Author:         Joe Somebody <joe.somebody@blah-ti-dah.com>
 # Dependencies:   erb
 # Changelog:      disabled layout and set css header, by default
-# 
 # i made some changes:
-#
 #  * i did this ... and did this ... and __this__ *might* `even` show __in__ *markdown*
 #  * also this
 

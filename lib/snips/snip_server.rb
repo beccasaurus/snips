@@ -101,12 +101,6 @@ module SnipServer::Controllers
     end
   end
 
-  class SnipFile < R '/' + Snip.file_regex.source
-    def get name, version
-      "... not sure how you got here ... the Snip::Server should have returned a file ..."
-    end
-  end
-
 end
 module SnipServer::Views
 

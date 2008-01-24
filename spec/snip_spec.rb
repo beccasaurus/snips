@@ -27,7 +27,7 @@ describe Snip do
   it "should crap out with the default File IO exception if file doesn't exist" do
     file = 'blah-1.0.rb'
     File.should_not_receive(:exists?).with file
-    lambda { snip = Snip.new( file ) }.should raise_error Errno::ENOENT
+    lambda { snip = Snip.new( file ) }.should raise_error( Errno::ENOENT )
   end
 
 end

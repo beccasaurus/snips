@@ -90,7 +90,7 @@ class Snip::Server
     
     # if GET or POST to /filename
     filename = request.env.PATH_INFO.sub(/^\//,'')
-    if filename[Snip::file_regex]
+    if filename[Snip::FILE_REGEX]
       if request.env.REQUEST_METHOD == 'GET'
 
         # return file    
