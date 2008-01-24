@@ -49,7 +49,11 @@ class Snip::Repo
 
     if compressed
       require 'zlib'
-      yaml = Zlib::Inflate.inflate yaml
+      begin
+        yaml = Zlib::Inflate.inflate yaml
+      rescue Zlib::DataError
+        yaml = nil
+      end
     end
 
     if yaml

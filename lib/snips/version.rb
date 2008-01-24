@@ -5,7 +5,7 @@ class Snip
     MINOR = 2
     TINY  = 0
     
-    SCM = 27
+    SCM = 42
     
     # ^ SCM set via script : `git log --pretty=oneline | wc -l`.strip
 
