@@ -129,6 +129,30 @@ describe Snip::Manager do
     @manager.uninstall(:sass).should == true
     @manager.uninstall(:sass).should == false
     @manager.installed?(:sass).should == false
+
+    @manager.uninstall_all
+  end
+
+  it 'dependencies should work' do
+    setup_default_manager
+    
+    snip_name = 'blah-ti-da_something'
+    @manager.installed?(snip_name).should == false
+    @manager.installed?(:sass).should     == false
+
+    @manager.install(snip_name).should    == true
+    @manager.install(snip_name).should    == false
+
+    @manager.installed?(snip_name).should == true
+    @manager.installed?(:sass).should     == true
+
+    @manager.uninstall(:sass).should      == true
+    @manager.installed?(:sass).should     == false
+    @manager.installed?(snip_name).should == true
+    @manager.uninstall(snip_name).should  == true
+    @manager.installed?(snip_name).should == false
+
+    @manager.uninstall_all
   end
 
 =begin

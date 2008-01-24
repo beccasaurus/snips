@@ -64,8 +64,8 @@ describe Snip::Repo do
     @local_and_remote_repos.each do |repo|
       list = repo.list
       %w( sass haml erb blah-ti-da_something sass_something ).each { |word| list.should include(word) }
-      ['sass (v 100)','(v 5)','erb (v 1)'].each { |word| list.should include(word) }
-      list.should_not include('sass (v 99)')
+      ['sass (v 0100)','(v 0005)','erb (v 0001)'].each { |word| list.should include(word) }
+      list.should_not include('sass (v 0099)')
     end
   end
 

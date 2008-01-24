@@ -24,11 +24,20 @@ class Snip::Manager
     self.variables      ||= {}
     self.path_seperator   = '$' 
     self.rc_file          = ENV['SNIP_RC']    || '~/.sniprc'
-    self.search_path      = ENV['SNIP_PATH']  || '~/.snips' #$http://snips.remi.org:8080' # <-- for NOW, for testing ...
+    # self.search_path      = ENV['SNIP_PATH']  || '~/.snips'  # <--- use this one to make specs not explode
+    self.search_path      = ENV['SNIP_PATH']  || '~/.snips$http://snips.code-snips.org' 
     self.install_path     = ENV['SNIP_REPO']  || '~/.snips'
 
     self.search_repos = []
   end
+
+  def self.commands &block # for defining commands in ~/.sniprc
+    unless block.nil?
+      require 'snips/bin'
+      bin = Snip::Bin
+      bin.instance_eval &block
+    end 
+  end 
 
   def load_config
     rc = File.expand_path self.rc_file
@@ -72,7 +81,7 @@ class Snip::Manager
   end
   
   def find_first_snip_and_repo name_or_matcher
-    name_or_matcher = snip.name if name_or_matcher.is_a?Snip
+    name_or_matcher = name_or_matcher.name if name_or_matcher.is_a?Snip
     found_snip, found_repo = nil, nil
     all_repos.find{ |repo| 
       found_snip = repo.snip( name_or_matcher ) 
@@ -101,6 +110,7 @@ class Snip::Manager
     ( path.nil? ) ? false : File.file?( path )
   end
   def install snip
+    original = snip
     raise "woah there, killer ... what're you trying to do?  you can't install to a remote repo." if self.install_repo.remote?
     unless installed? snip
       snip, repo = find_first_snip_and_repo snip
@@ -109,15 +119,30 @@ class Snip::Manager
         File.makedirs self.install_repo.location unless File.directory? self.install_repo.location
         raise "Problem accessing snip install directory #{self.install_repo.location}" unless File.directory? self.install_repo.location
 
+        if snip.dependencies and not snip.dependencies.to_list.empty?
+          snip.dependencies.to_list.each do |dependency|
+            dependency = snip( dependency.strip.downcase )
+            unless dependency.nil? or dependency == snip or installed? dependency
+              puts "Installing dependency: #{dependency.filename}"
+              self.install dependency
+            end
+          end
+        end
+
         File.open( self.install_repo.snip_path(snip), 'w' ){ |f| f << repo.read(snip) }
         self.install_repo.reload
         return true
 
+      else
+        puts "Couldn't find snip to install: #{original.inspect}"
       end
     end
     false
   end
 
+  def uninstall_all
+    install_repo.all_snips.each { |snip| uninstall snip }
+  end
   def uninstall snip
     if installed? snip and self.install_repo.local?
       snip_path = self.install_repo.snip_path(snip)
