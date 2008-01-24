@@ -99,7 +99,7 @@ describe Snip::Manager do
   it 'should return snip/snips with first matches found, going thru search path' do
     setup_default_manager
     File.stub!(:read).and_return('')
-    @manager.snip( :sass ).filename.should == 'sass.0100.rb'
+    @manager.snip( :sass ).filename.should == 'sass-0100.rb'
     @manager.search_repos.delete @manager.search_repos.find { |repo| repo.location == File.expand_path('~/.snips') }
     @manager.snips.length.should == 7
     @manager.all_snips.length.should == 8
