@@ -74,12 +74,6 @@ describe Snip::Manager do
     ENV.should_receive(:[]).with('SNIP_PATH').and_return( '$~/.snips$/another/path$http://somesite.com:80$/a/path$https://snips.remi.org:4407/snips/here$/root/.snips$' )
     ENV.should_receive(:[]).with('SNIP_REPO').and_return( nil )
 
-    # open-uri checks these puppies - which we've gotta handle cause we're passing http:// remote repo paths
-    ENV.should_receive(:[]).with('http_proxy').and_return( nil )
-    ENV.should_receive(:[]).with('HTTP_PROXY').and_return( nil )
-    ENV.should_receive(:[]).with('https_proxy').any_number_of_times.and_return( nil )
-    ENV.should_receive(:[]).with('HTTPS_PROXY').any_number_of_times.and_return( nil )
-
     manager = Snip::Manager.new
     manager.rc_file.should        == '~/.sniprc'
     manager.install_path.should   == '~/.snips'
@@ -98,7 +92,6 @@ describe Snip::Manager do
 
   it 'should return snip/snips with first matches found, going thru search path' do
     setup_default_manager
-    File.stub!(:read).and_return('')
     @manager.snip( :sass ).filename.should == 'sass-0100.rb'
     @manager.search_repos.delete @manager.search_repos.find { |repo| repo.location == File.expand_path('~/.snips') }
     @manager.snips.length.should == 7

@@ -18,9 +18,18 @@ describe Snip::Repo do
   it 'should have a reload method to reload @all_snips' do
     @repo.all_snips.length.should == 8
     @repo.all_snips.clear
-    @repo.all_snips.length.should == 0
+    @repo.instance_eval{ @all_snips }.should be_empty
     @repo.reload
+    @repo.instance_eval{ @all_snips }.length.should == 8
     @repo.all_snips.length.should == 8
+  end
+
+  it 'should lazy load snips (load when .snips or .current/all_snips called)' do
+    @local_and_remote_repos.each do |repo|
+      repo.instance_eval { @all_snips }.should be_nil
+      repo.all_snips
+      repo.instance_eval { @all_snips }.should_not be_nil
+    end
   end
 
   it 'should load all Snips from a directory' do

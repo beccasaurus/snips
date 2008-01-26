@@ -24,8 +24,8 @@ class Snip::Manager
     self.variables      ||= {}
     self.path_seperator   = '$' 
     self.rc_file          = ENV['SNIP_RC']    || '~/.sniprc'
-    # self.search_path      = ENV['SNIP_PATH']  || '~/.snips'  # <--- use this one to make specs not explode
-    self.search_path      = ENV['SNIP_PATH']  || '~/.snips$http://snips.code-snips.org' 
+    self.search_path      = ENV['SNIP_PATH']  || '~/.snips'  # <--- use this one to make specs not explode
+    # self.search_path      = ENV['SNIP_PATH']  || '~/.snips$http://snips.code-snips.org' 
     self.install_path     = ENV['SNIP_REPO']  || '~/.snips'
 
     self.search_repos = []
@@ -53,6 +53,7 @@ class Snip::Manager
   def all_repos
     ( self.search_repos << self.install_repo ).uniq
   end
+  alias repos all_repos
 
   def snip name_or_matcher
     first_found = nil

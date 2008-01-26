@@ -13,7 +13,11 @@ class Snip::Repo
   # repo_location: local directory or url or remote repository
   def initialize repo_location
     @location = repo_location
-    reload
+  end
+
+  def all_snips
+    reload if @all_snips.nil? or @all_snips.empty?
+    @all_snips
   end
 
   def reload
@@ -27,6 +31,7 @@ class Snip::Repo
   end
 
   def reload_local
+    @all_snips ||= []
     @all_snips = (File.directory?@location) ? Dir[ File.join(@location, '*') ].collect { |file| Snip.new file }.select { |snip| snip.headers.length > 0  } : []
   end
 
@@ -67,8 +72,8 @@ class Snip::Repo
   # returns all snips, without old versions of any (using version number)
   def current_snips
     current = {}
-    @all_snips.each do |snip|
-      unless current.keys.include?snip.name and current[snip.name].version.to_i > snip.version.to_i
+    self.all_snips.each do |snip|
+      unless current.keys.include?snip.name and current[snip.name].version > snip.version
         current[snip.name] = snip
       end
     end
@@ -81,7 +86,7 @@ class Snip::Repo
   #     snip 'sass'   # returns snip names 'sass'
   #     snip /sass/   # returns first snip that matches /regex/
   #
-  def snip name_or_matcher, iterator='find', snips_to_search=current_snips
+  def snip name_or_matcher, iterator='find', snips_to_search=self.current_snips
     name_or_matcher = name_or_matcher.to_s if name_or_matcher.is_a?Symbol
     if name_or_matcher.is_a?Regexp
       snips_to_search.send( iterator ){ |snip| snip.name[name_or_matcher] }
