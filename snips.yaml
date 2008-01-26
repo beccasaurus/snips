@@ -1,0 +1,44 @@
+--- 
+- !ruby/object:Snip 
+  variables: 
+    name: say-hello
+    hi: there
+    extension: rb
+    not_headers: 
+    - name
+    - version
+    - filename
+    - extension
+    - not_headers
+    version: "0.1"
+    filename: say-hello-0.1.rb
+- !ruby/object:Snip 
+  variables: 
+    name: say-hello
+    hi: |-
+      there
+      this is old, even tho it's new
+    extension: rb
+    not_headers: 
+    - name
+    - version
+    - filename
+    - extension
+    - not_headers
+    version: 0.0.2
+    filename: say-hello-0.0.2.rb
+- !ruby/object:Snip 
+  variables: 
+    name: say-hello
+    hi: |-
+      there
+      this is new!
+    extension: rb
+    not_headers: 
+    - name
+    - version
+    - filename
+    - extension
+    - not_headers
+    version: 0.2.0
+    filename: say-hello-0.2.0.rb

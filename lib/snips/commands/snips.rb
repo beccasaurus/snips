@@ -51,10 +51,38 @@ doco
     end
   end
 
+  def self.generate_index_help
+    <<doco
+Usage: snip generate_index [repo-path]
+
+  Generates index files required to host 
+  snip servers ( snips.(yaml|index)[.Z] )
+
+  Summary:
+    generates index files for snip server
+doco
+  end
+  def self.generate_index *args
+    repo = args.shift
+    repo = Snip::Repo.new( repo ) if repo
+    if repo and require 'zlib'
+      files = {
+        'snips.index'   => repo.index,
+        'snips.index.Z' => Zlib::Deflate.deflate( repo.index ),
+        'snips.yaml'    => repo.yaml,
+        'snips.yaml.Z'  => Zlib::Deflate.deflate( repo.yaml )
+      }
+      files.each { |k,v| 
+        puts "Writing #{k}"
+        File.open(k,'w'){ |f| f << v}
+      }
+    end
+  end
+
   # SERVER
   def self.server_help
     <<doco
-Usage: snip server [repo-path]
+Usage: snip server [-p/--port PORT] [repo-path]
 
   Runs a snip server hosting the snips 
   from your local install_repo or from 

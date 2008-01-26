@@ -184,6 +184,17 @@ class Snip::Repo
     found.uniq
   end
 
+  # returns text for snips.index[.Z]
+  def index
+    all_snips.inject(''){ |all,snip| all << (snip.filename + "\n") }
+  end
+
+  # returns text for snips.yaml[.Z]
+  def yaml
+    require 'yaml'
+    all_snips.to_yaml
+  end
+
   def remote?
     Snip::Repo.is_remote? @location
   end

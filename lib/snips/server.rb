@@ -24,12 +24,12 @@ class Snip::Server
     require 'zlib' if compress
 
     if    path == 'snips.index' or path == 'snips.index.Z'
-      index         = self.repo.all_snips.inject(''){ |all,snip| all << (snip.filename + "\n") }
+      index         = self.repo.index
       response.body = (compress) ? Zlib::Deflate.deflate(index) : index
 
     elsif path == 'snips.yaml'  or path == 'snips.yaml.Z'
       require 'yaml'
-      yaml          = self.repo.all_snips.to_yaml
+      yaml          = self.repo.yaml
       response.body = (compress) ? Zlib::Deflate.deflate(yaml) : yaml
 
     elsif path[/^snips\//] and path.gsub(/^snips\//, '')[Snip::FILE_REGEX]
