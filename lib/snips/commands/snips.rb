@@ -32,6 +32,38 @@ doco
     puts $SNIP_MANAGER.list
   end
 
+  # SEARCH
+  def self.search_help
+    <<doco
+Usage: snip search 'query' [-i/--include name,tags] [-a/--all]
+
+  Options:
+    -a, --all             Search all snip versions, not just current
+    -i, --include ATTRS   Attributes to include in search (snip headers, etc)
+    -s, --source  REPO    Specify the location of a repository to search
+
+  Examples:
+    snip search 'hello'               # searches names, descriptions, and tags
+    snip search 'hello' -i changelog  # search for 'hello' in snips' changelogs
+
+  Summary:
+    searches snips
+doco
+  end
+  def self.search *args
+    options = { :include => %w( tags name description ), :source => $SNIP_MANAGER }
+    OptionParser.new { |opts| 
+      opts.on('-i','--include [ATTRS]'){ |attrs| options[:include] = attrs.to_list }
+      opts.on('-a','--all'){ options[:all] = true }
+      opts.on('-s','--source [SOURCE]'){ |source| options[:source] = Snip::Repo.new(source) }
+    }.parse!( args )
+    query = args.shift
+    snips = options[:source].search query, options
+    snips.each do |snip|
+      puts "#{snip.name} (v #{ snip.version }) \t- #{snip.description[/.*/] if snip.description}"
+    end
+  end
+
   # WHICH
   def self.which_help
     <<doco
@@ -51,6 +83,7 @@ doco
     end
   end
 
+  # GENERATE INDEX
   def self.generate_index_help
     <<doco
 Usage: snip generate_index [repo-path]

@@ -5,6 +5,7 @@ README
 README.txt
 Rakefile
 bin/snip
+bin/snips
 config/hoe.rb
 config/requirements.rb
 examples/sniprc

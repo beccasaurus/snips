@@ -9,21 +9,27 @@ class Snip::Bin
   def self.snip_help
     <<doco
 
-  snip
+  snip == %{ Shared Code Snippets }
+                   by remi
 
     Usage:
-      snip ...
+      snip -h/--help
+      snip -v/--version
+      snip command [arguments...] [options...]
       snip [arguments...] [options...] # calls #{@default_command}
 
     Examples:
-      snip ...
+      snip list
+      snip cat hello-world
+      snip install hello-world
+      snip run hello-world
 
     Further help:
       snip help commands       list all 'snip' commands
       snip help <COMMAND>      show help on COMMAND
                                   (e.g. 'snip help help')
     Further information:
-      http://snips.rubyforge.org
+      http://www.code-snips.org
 doco
   end
   

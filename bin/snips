@@ -1,0 +1,2 @@
+#! /usr/bin/env ruby
+puts "Did you mean 'snip' ?"
