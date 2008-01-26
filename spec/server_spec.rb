@@ -16,7 +16,7 @@ describe Snip::Server do
   end
 
   it 'should return the plain/text file for a snip at /#{snip filename}' do
-    response = @request.get '/test-0001.rb'
+    response = @request.get '/snips/test-0001.rb'
     response.body.should == File.read( 'examples/snips/test-0001.rb' )
   end
 

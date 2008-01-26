@@ -32,7 +32,8 @@ class Snip::Server
       yaml          = self.repo.all_snips.to_yaml
       response.body = (compress) ? Zlib::Deflate.deflate(yaml) : yaml
 
-    elsif path[Snip::FILE_REGEX]
+    elsif path[/^snips\//] and path.gsub(/^snips\//, '')[Snip::FILE_REGEX]
+      env.PATH_INFO.gsub!( /^\/snips\//, '' )
       return Rack::File.new( @repo.location  ).call( env )
     
     else
