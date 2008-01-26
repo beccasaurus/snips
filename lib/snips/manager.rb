@@ -138,7 +138,9 @@ class Snip::Manager
           bin = File.join( self.install_repo.location, 'bin' )
           File.makedirs bin unless File.directory? bin
           File.open( File.join(bin, snip.name), 'w' ){ |f| f << snip_source }
+          File.chmod 0755, File.join(bin, snip.name)
           File.open( File.join(bin, snip.name + '.' + snip.extension), 'w' ){ |f| f << snip_source }
+          File.chmod 0755, File.join(bin, snip.name + '.' + snip.extension)
         end
         
         self.install_repo.reload
