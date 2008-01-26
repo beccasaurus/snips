@@ -12,7 +12,7 @@ class Snip::Repo
 
   # repo_location: local directory or url or remote repository
   def initialize repo_location
-    @location = repo_location
+    @location = repo_location.strip
   end
 
   def all_snips

@@ -24,14 +24,14 @@ class Snip::Manager
     self.variables      ||= {}
     self.path_seperator   = '$' 
     self.rc_file          = ENV['SNIP_RC']    || '~/.sniprc'
-    self.search_path      = ENV['SNIP_PATH']  || '~/.snips'  # <--- use this one to make specs not explode
-    # self.search_path      = ENV['SNIP_PATH']  || '~/.snips$http://snips.code-snips.org' 
+    self.search_path      = ENV['SNIP_PATH']  || 'http://snips.code-snips.org' 
     self.install_path     = ENV['SNIP_REPO']  || '~/.snips'
 
     self.search_repos = []
   end
 
-  def self.commands &block # for defining commands in ~/.sniprc
+  # to help define commands in ~/.sniprc
+  def self.commands &block
     unless block.nil?
       require 'snips/bin'
       bin = Snip::Bin
@@ -45,8 +45,8 @@ class Snip::Manager
   end
 
   def search_paths
-    paths = self.search_path.split(self.path_seperator).select { |path| not path.empty? }.uniq
-    paths = [self.install_path] + paths unless paths.include? self.install_path
+    paths = self.search_path.split( self.path_seperator ).map{ |path| path.strip }.select { |path| not path.empty? }.uniq
+    paths = [ self.install_path ] + paths unless paths.include? self.install_path
     paths || []
   end
 

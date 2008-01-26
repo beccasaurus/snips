@@ -95,6 +95,8 @@ describe Snip::Repo do
       repo.search( 'I MADE some CHANGES', :include => [:changelog] ).length.should == 1   # sass 0100
       repo.search( 'I MADE some CHANGES', :include => :changelog ).length.should == 1     # sass 0100
       repo.search( 'I MADE some CHANGES', :include => 'changelog' ).length.should == 1     # sass 0100
+      repo.search( 'I MADE some CHANGES', :include => [:changelog,:noexist] ).length.should == 1   # sass 0100
+      repo.search( 'I MADE some CHANGES', :include => [:changelog,:noexist,'blah','jdklf'] ).length.should == 1   # sass 0100
     end
   end
 
