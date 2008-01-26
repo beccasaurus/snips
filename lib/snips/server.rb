@@ -52,9 +52,9 @@ overriding Snip::Server#fallback, which accepts an argument for environment/requ
 body
   end
 
-  def run
+  def run options
     require 'thin'
-    Rack::Handler::Thin.run self
+    Rack::Handler::Thin.run self, options
   end
 
 end

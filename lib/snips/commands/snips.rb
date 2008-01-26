@@ -64,13 +64,15 @@ Usage: snip server [repo-path]
     starts up a snip server
 doco
   end
-  def self.server *repo
-    repo = repo.shift
-    if repo
-      Snip::Server.new( repo ).run
-    else
-      Snip::Server.new( $SNIP_MANAGER.install_repo.location ).run
-    end
+  def self.server *args
+    options = { :Port => 5000, :repo => $SNIP_MANAGER.install_repo.location }
+    OptionParser.new { |opts| 
+      opts.on('-p','--port [PORT]'){ |port| options[:Port] = port.to_i }
+    }.parse!( args )
+  
+    options[:repo] = args.first unless args.empty?
+    
+    Snip::Server.new( options[:repo] ).run options
   end
 
   # INSTALL
