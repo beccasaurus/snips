@@ -130,7 +130,17 @@ class Snip::Manager
           end
         end
 
-        File.open( self.install_repo.snip_path(snip), 'w' ){ |f| f << repo.read(snip) }
+        snip_source = repo.read snip
+        File.open( self.install_repo.snip_path(snip), 'w' ){ |f| f << snip_source }
+
+        # create in 'bin' if starts with shabang
+        if snip_source[/^#!/]
+          bin = File.join( self.install_repo.location, 'bin' )
+          File.makedirs bin unless File.directory? bin
+          File.open( File.join(bin, snip.name), 'w' ){ |f| f << snip_source }
+          File.open( File.join(bin, snip.name + '.' + snip.extension), 'w' ){ |f| f << snip_source }
+        end
+        
         self.install_repo.reload
         return true
 
@@ -146,8 +156,15 @@ class Snip::Manager
   end
   def uninstall snip
     if installed? snip and self.install_repo.local?
+
       snip_path = self.install_repo.snip_path(snip)
+      snip      = self.install_repo.snip( snip )
+      bin       = File.join( self.install_repo.location, 'bin' )
+
       File.delete snip_path if File.file? snip_path
+      File.delete File.join(bin, snip.name) if File.file? File.join(bin, snip.name)
+      File.delete File.join(bin, snip.name + '.' + snip.extension) if File.file? File.join(bin, snip.name + '.' + snip.extension)
+
       self.install_repo.reload
       return true unless File.file? snip_path
     end

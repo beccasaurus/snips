@@ -2,6 +2,12 @@ require File.dirname(__FILE__) + '/spec_helper'
 
 describe Snip::Manager do
 
+  after do
+    if @manager
+      @manager.uninstall_all
+    end
+  end
+
   # to call before making a new Snip::Manager, to load up the sniprc
   def use_example_sniprc
     ENV.should_receive(:[]).with('SNIP_RC').and_return( File.expand_path('examples/sniprc') )
@@ -144,6 +150,29 @@ describe Snip::Manager do
     @manager.installed?(snip_name).should == true
     @manager.uninstall(snip_name).should  == true
     @manager.installed?(snip_name).should == false
+
+    @manager.uninstall_all
+  end
+
+  it 'should install scripts with shabang lines into install_path/bin' do
+    setup_default_manager
+    
+    @manager.installed?(:test).should == false
+    @manager.install(:test).should == true
+    @manager.install(:test).should == false
+    @manager.installed?(:test).should == true
+
+    File.file?( File.join(@manager.install_path, 'test-0001.rb') ).should be_true
+    File.file?( File.join(@manager.install_path, 'bin', 'test') ).should be_true
+    File.file?( File.join(@manager.install_path, 'bin', 'test.rb') ).should be_true
+
+    @manager.uninstall(:test).should == true
+    @manager.uninstall(:test).should == false
+    @manager.installed?(:test).should == false
+
+    File.file?( File.join(@manager.install_path, 'test-0001.rb') ).should_not be_true
+    File.file?( File.join(@manager.install_path, 'bin', 'test') ).should_not be_true
+    File.file?( File.join(@manager.install_path, 'bin', 'test.rb') ).should_not be_true
 
     @manager.uninstall_all
   end

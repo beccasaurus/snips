@@ -87,6 +87,7 @@ class Snip::Repo
   #     snip /sass/   # returns first snip that matches /regex/
   #
   def snip name_or_matcher, iterator='find', snips_to_search=self.current_snips
+    return name_or_matcher if name_or_matcher.is_a?Snip
     name_or_matcher = name_or_matcher.to_s if name_or_matcher.is_a?Symbol
     if name_or_matcher.is_a?Regexp
       snips_to_search.send( iterator ){ |snip| snip.name[name_or_matcher] }
